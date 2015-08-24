@@ -7,13 +7,14 @@ let EventEmitter = Npm.require('events').EventEmitter;
 /**
  * Galil controller server methods
  *
- * @module Galil
+ * @module Server/Galil
  * @extends EventEmitter
  */
 
 let config = ServiceConfiguration.configurations.findOne({ service: 'galil' });
 
-Galil = new EventEmitter();
+// on the server, it can extend event emitter
+_.extend(Galil, new EventEmitter());
 Galil._port = config ? config.port : null;
 Galil._host = config ? config.host : null;
 
@@ -47,7 +48,7 @@ Object.defineProperties(Galil, {
 /**
  * Set up a socket connection
  *
- * @module Galil
+ * @module Server/Galil
  * @method _createConnection
  * @param {String} name The name for the connection. Mostly used for humans to identify it.
  * @param {Function} onError Because this opens a `net.connect`, onError is passed as the Meteor.bindEnvironment callback
@@ -58,7 +59,7 @@ Galil._createConnection = function(name, onError = _.noop) {
   check(name, String);
 
   let log = function(message) {
-    return GalilMessages.insert({
+    return Galil.collection.insert({
       socket: name,
       message: message,
       timestamp: new Date
@@ -127,7 +128,7 @@ Galil.execute = function(command) {
  * @example
  * // sending a single command
  * > Galil.sendCommand('MG "Hello, world!"');
- * > GalilMessages.find().fetch()
+ * > Galil.collection.find().fetch()
  * [{
  *  socket: 'commands',
  *  message: 'Hello, world!',
@@ -136,7 +137,7 @@ Galil.execute = function(command) {
  *
  * // send a series of commands in sequence
  * > Galil.sendCommand(['MG "Hello, "', 'MG "World!"']);
- * > GalilMessages.find().fetch()
+ * > Galil.collection.find().fetch()
  * [{
  *  socket: 'commands',
  *  message: 'Hello, world!',
@@ -163,7 +164,7 @@ Galil.sendCommand = function(command) {
  *
  * @module Server/Galil
  * @method sendCommand
- * @param {String} command the command to execute
+ * @param {String|Array} command the command or commands to execute
  * @returns {Promise} a promisified response
  * @example
  * > Galil.execute('Load');
@@ -175,17 +176,48 @@ Galil.sendCommands = function(commands) {
   });
 }
 
-Galil.uploadProgram = function(programFile) {
-  let programPath = path.resolve(`../../../../../../programs/${programFile}.cmd`);
-  fs.readFileAsync(programPath, 'utf8')
-    .then((program) => {
-      program += '<cntrl>Z';
-      this._commands.write(`UL ${program}\r`);
-    }).catch(console.log);
+/**
+ * Uploads a program to the galil controller
+ *
+ * @module Server/Galil
+ * @method uploadProgram
+ * @param {String} programName name of the subroutine to run
+ * @param {Array} instructions the instructions to upload
+ */
+Galil.uploadProgram = function(programName, instructions) {
+  check(programName, String);
+  check(instructions, Array);
+}
+
+
+/**
+ * Download an array to the controller
+ *
+ * @module Server/Galil
+ * @method downloadArray
+ * @param {String} arrayName the name of the array to update
+ * @param {Array} DMArray what to set the values to
+ * @throws Match.Error if the type check fails.
+ */
+Galil.downloadArray = function (arrayName, dmArray) {
+  check(arrayName, String);
+  check(dmArray, Array);
+
+  this.sendCommands(_.map(_.chunk(dmArray, 4), (chunk, index) => {
+    let start = index * chunk.length;
+    let end = start + chunk.length;
+    return `QD ${arrayName}[] ${start},${end}\r${chunk.join(',')}\\`;
+  }));
+}
+
+Galil.uploadArray = function (arrayName) {
+  check(arrayName, String);
+  this.sendCommand(`QU ${arrayName}`);
 }
 
 Meteor.methods({
   'Galil.sendCommand': Galil.sendCommand.bind(Galil),
-  'Galil.sendCommands': Galil.sendCommands.bind(Galil)
+  'Galil.sendCommands': Galil.sendCommands.bind(Galil),
+  'Galil.array.download': Galil.downloadArray.bind(Galil)
 });
 

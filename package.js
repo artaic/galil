@@ -13,7 +13,6 @@ Package.onUse(function(api) {
   api.use(['check', 'mongo', 'grigio:babel', 'erasaur:meteor-lodash', 'service-configuration'], both);
 
   api.export('Galil', both);
-  api.export('GalilMessages', both);
 
   api.addFiles('lib/common.es6', both);
   api.addFiles('lib/server.es6', 'server');

@@ -1,5 +1,3 @@
-Galil = {};
-
 /**
  * Wrapper around client methods.
  * Makes sure that all methods will return promisified data
@@ -9,6 +7,7 @@ Galil = {};
  */
 let _galilMethodAsync = function (method, data) {
   check(method, String);
+
   if (!_.isArray(data)) {
     data = [data];
   }
@@ -39,5 +38,9 @@ let _galilMethodAsync = function (method, data) {
  */
 Galil.sendCommand = function (command) {
   return _galilMethodAsync('sendCommand', command);
+}
+
+Galil.downloadArray = function (arrName, arrayData) {
+  return _galilMethodAsync('downloadArray', arrName, arrayData);
 }
 
