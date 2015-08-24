@@ -13,13 +13,9 @@ let EventEmitter = Npm.require('events').EventEmitter;
 
 let config = ServiceConfiguration.configurations.findOne({ service: 'galil' });
 
-if (!config) {
-  throw new Meteor.Error(500, 'Required configuration for startup');
-}
-
 Galil = new EventEmitter();
-Galil._port = config.port;
-Galil._host = config.host;
+Galil._port = config ? config.port : null;
+Galil._host = config ? config.host : null;
 
 Object.defineProperties(Galil, {
   'port': {
@@ -48,16 +44,18 @@ Object.defineProperties(Galil, {
   }
 });
 
-console.log(Galil);
-
 /**
  * Set up a socket connection
  *
+ * @module Galil
+ * @method _createConnection
  * @param {String} name The name for the connection. Mostly used for humans to identify it.
  * @param {Function} onError Because this opens a `net.connect`, onError is passed as the Meteor.bindEnvironment callback
+ * @private
  */
 Galil._createConnection = function(name, onError = _.noop) {
   let self = this;
+  check(name, String);
 
   let log = function(message) {
     return GalilMessages.insert({
@@ -67,9 +65,7 @@ Galil._createConnection = function(name, onError = _.noop) {
     });
   }
 
-  let socket = net.connect(this._port, this._host, Meteor.bindEnvironment(function() {
-    socket.write(`MG "connect"\r`);
-  }));
+  let socket = new net.Socket();
 
   socket.on('data', Meteor.bindEnvironment(function(data) {
     let str = _.trim(data.toString('ascii'));
@@ -88,16 +84,20 @@ Galil._createConnection = function(name, onError = _.noop) {
     }
   }), onError);
 
-  socket.on('error', Meteor.bindEnvironment(function(error) {
-    console.warn(error);
-    log(error);
-  }), onError);
+  socket.on('error', Meteor.bindEnvironment(log), onError);
+  socket.on('close', Meteor.bindEnvironment(log), onError);
+
+  if (this._port && this._host) {
+    socket.connect(this._port, this._host, Meteor.bindEnvironment(function() {
+      socket.write(`MG "connect"\r`);
+    }));
+  }
 
   return socket;
 }
 
-Galil._commands = Galil._createConnection('commands');
 Galil._messages = Galil._createConnection('messages');
+Galil._commands = Galil._createConnection('commands');
 
 Galil._messages.write('CF I\r');
 
@@ -105,7 +105,7 @@ Galil._messages.write('CF I\r');
  * Execute a command on the galil controller
  * TO DO: Wait on the response as "END:[routine]" to return
  *
- * @module Galil
+ * @module Server/Galil
  * @method execute
  * @param {String} command the command to execute
  * @example
@@ -119,20 +119,55 @@ Galil.execute = function(command) {
 /**
  * Sends command to the Galil controller from the server
  *
- * @module Galil
+ * @module Server/Galil
+ * @method sendCommand
+ * @param {String|Array} command the command to execute
+ * @returns {Promise} a promisified response
+ * @throws MatchError if not provided an array or string
+ * @example
+ * // sending a single command
+ * > Galil.sendCommand('MG "Hello, world!"');
+ * > GalilMessages.find().fetch()
+ * [{
+ *  socket: 'commands',
+ *  message: 'Hello, world!',
+ *  timestamp: sometime
+ * }]
+ *
+ * // send a series of commands in sequence
+ * > Galil.sendCommand(['MG "Hello, "', 'MG "World!"']);
+ * > GalilMessages.find().fetch()
+ * [{
+ *  socket: 'commands',
+ *  message: 'Hello, world!',
+ *  timestamp: ISODate()
+ * }, {
+ *  socket: 'commands',
+ *  message: 'Hello, ',
+ *  timestamp: ISODate()
+ * }, {
+ *  socket: 'commands',
+ *  message: 'World!',
+ *  timestamp: ISODate()
+ * }]
+ */
+Galil.sendCommand = function(command) {
+  check(command, Match.OneOf(String, Array));
+  return new Promise((resolve, reject) => {
+    this._commands.write(`${command}\r`, resolve);
+  });
+};
+
+/**
+ * Alias for `Galil.sendCommand`
+ *
+ * @module Server/Galil
  * @method sendCommand
  * @param {String} command the command to execute
  * @returns {Promise} a promisified response
  * @example
  * > Galil.execute('Load');
  */
-Galil.sendCommand = function(command) {
-  check(command, String);
-  return new Promise((resolve, reject) => {
-    this._commands.write(`${command}\r`, resolve);
-  });
-};
-
 Galil.sendCommands = function(commands) {
   check(commands, Array);
   Promise.each(commands, (command) => {
@@ -148,13 +183,6 @@ Galil.uploadProgram = function(programFile) {
       this._commands.write(`UL ${program}\r`);
     }).catch(console.log);
 }
-
-Galil.on('PillsDispensed', Meteor.bindEnvironment(function (cartridge) {
-  let c = Cartridges.findOne({ slot: cartridge });
-  console.log(c);
-}));
-
-console.log(Galil);
 
 Meteor.methods({
   'Galil.sendCommand': Galil.sendCommand.bind(Galil),
