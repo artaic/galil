@@ -47,8 +47,6 @@ You can change these with a setter:
 }
 ```
 
-### Interacting with the Controller
-
 Typically you will install a program on the controller using Galil's
 GalilTools software and execute subroutines within your program:
 
@@ -64,13 +62,17 @@ MG "mySub:End"
 
 In this example, we've provided some additional messages at the beginning and
 end of the subroutine to help the package signal when the subroutine has
-completed.
+completed, as it is otherwise an asynchronous operation.
+
+To execute this subroutine using GalilTools, you'd use the XQ firmware command:
 
 ```
 XQ #mySub
 ```
 
-The Galil controller exports with a collection `Galil.collection`. This
+### Interacting with the Controller
+
+The Galil package exports with a collection `Galil.collection`. This
 will be written to whenever a message is received and has the following
 format.
 
@@ -83,14 +85,10 @@ format.
 
 - `socket` is the socket that received this message. It could be either
   `messages` or `commands`.
-
 - `message` is the _parsed_ data received from the data event.
-
 - `timestamp` is the time that it was added to the collection.
-
 - `type` is the type of message it was. If you delimit your messages with
-  something, it will be the 0th index.
-  
+  something, it will be the 0th index.  
 
 ### Responding to Events
 
@@ -129,10 +127,10 @@ to execute:
 
 ```
 // Usage on the client
-Galil.execute('Startup', 60, function () {
-  console.log('Finished setup!')
+Galil.execute('mySub', 60 * 1000, function () {
+  console.log('Finished subroutine!')
 });
 
 // Usage on the server
-Galil.execute('Startup', 60);
+Galil.execute('mySub', 60 * 1000);
 ```
