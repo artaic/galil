@@ -23,11 +23,10 @@ Package.onUse(function(api) {
 
 Package.onTest(function(api) {
   var both = ['client', 'server'];
-  api.use(['tinytest', 'grigio:babel']);
+  api.use(['practicalmeteor:munit', 'grigio:babel', 'erasaur:meteor-lodash']);
   api.use('rtaic:galil');
 
-  api.addFiles('test/client.es6', 'client');
-  api.addFiles('test/server.es6', 'server');
+  api.addFiles(['test/init.es6', 'test/connection.es6']);
 });
 
 Npm.depends({
