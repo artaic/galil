@@ -1,0 +1,53 @@
+<head>
+  <title>Leaderboard</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <link href='https://fonts.googleapis.com/css?family=PT+Sans+Narrow' rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+  <div class="console">
+    {{>console}}
+  </div>
+</body>
+
+<template name="console">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Commands
+        </div>
+        <div class="panel-body">
+          {{#each commands}}
+            <div class="{{ socket }} {{ type }}">
+            {{ message }}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Messages
+        </div>
+        <div class="panel-body">
+          {{#each messages}}
+            <div class="{{ socket }} {{ type }}">
+              {{ message }}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="galil-commands">
+    <form id="command-form">
+      <div class="input-group">
+        <span class="input-group-addon" id="basic-addon1">@</span>
+        <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+      </div>
+    </form>
+  </div>
+</template>
+
