@@ -4,7 +4,7 @@
 <dd><p>Parses a message to something more readable by javascript</p>
 </dd>
 <dt><a href="#module_Server/Galil">Server/Galil</a> ⇐ <code>EventEmitter</code></dt>
-<dd><p>Galil controller server methods</p>
+<dd><p>Galil controller for server methods</p>
 </dd>
 </dl>
 ## Functions
@@ -37,79 +37,20 @@ Galil._messages.on('data', (data) => {
 ```
 <a name="module_Server/Galil"></a>
 ## Server/Galil ⇐ <code>EventEmitter</code>
-Galil controller server methods
+Galil controller for server methods
 
 **Extends:** <code>EventEmitter</code>  
+**Author:** Alex Frazer  
+**Properties**
 
-* [Server/Galil](#module_Server/Galil) ⇐ <code>EventEmitter</code>
-  * [~execute(command)](#module_Server/Galil..execute) ⇒ <code>String</code>
-  * [~sendCommand(command)](#module_Server/Galil..sendCommand) ⇒ <code>Promise</code>
-  * [~sendCommands()](#module_Server/Galil..sendCommands)
-
-<a name="module_Server/Galil..execute"></a>
-### Server/Galil~execute(command) ⇒ <code>String</code>
-Execute a command on the galil controller
-This will lock in execution synchronously with a fiber.
-
-**Kind**: inner method of <code>[Server/Galil](#module_Server/Galil)</code>  
-**Returns**: <code>String</code> - the name of the routine completed.  
-
-| Param | Type | Description |
+| Name | Type | Description |
 | --- | --- | --- |
-| command | <code>String</code> | the command to execute |
+| config | <code>Object</code> | the configuration object |
+| config.connection | <code>Object</code> | the connection to the controller |
+| config.connection.port | <code>Number</code> | the port to connect to |
+| config.connection.host | <code>String</code> | the host to connect to |
+| config.timeout | <code>Number</code> | how long to wait on synchronous functions before timing out |
 
-**Example**  
-```js
-> Galil.execute('Load');
-```
-<a name="module_Server/Galil..sendCommand"></a>
-### Server/Galil~sendCommand(command) ⇒ <code>Promise</code>
-Sends command to the Galil controller from the server
-
-**Kind**: inner method of <code>[Server/Galil](#module_Server/Galil)</code>  
-**Returns**: <code>Promise</code> - a promisified response  
-**Throws**:
-
-- MatchError if not provided an array or string
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| command | <code>String</code> &#124; <code>Array</code> | the command to execute |
-
-**Example**  
-```js
-// sending a single command
-> Galil.sendCommand('MG "Hello, world!"');
-> Galil.collection.find().fetch()
-[{
- socket: 'commands',
- message: 'Hello, world!',
- timestamp: sometime
-}]
-
-// send a series of commands in sequence
-> Galil.sendCommand(['MG "Hello, "', 'MG "World!"']);
-> Galil.collection.find().fetch()
-[{
- socket: 'commands',
- message: 'Hello, world!',
- timestamp: ISODate()
-}, {
- socket: 'commands',
- message: 'Hello, ',
- timestamp: ISODate()
-}, {
- socket: 'commands',
- message: 'World!',
- timestamp: ISODate()
-}]
-```
-<a name="module_Server/Galil..sendCommands"></a>
-### Server/Galil~sendCommands()
-Send a variety of commands as an array
-
-**Kind**: inner method of <code>[Server/Galil](#module_Server/Galil)</code>  
 <a name="list"></a>
 ## list()
 Lists all of the allocated arrays on the controller
