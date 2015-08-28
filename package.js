@@ -1,8 +1,8 @@
 Package.describe({
   name: 'rtaic:galil',
   version: '0.0.1',
-  summary: 'Interact with the Galil controller',
-  git: 'https://github.com/artaic/Galil',
+  summary: 'Interact with a Galil motion controller',
+  git: 'https://github.com/artaic/galil',
   documentation: 'README.md'
 });
 
