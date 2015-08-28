@@ -1,78 +1,104 @@
 # Galil Controller
 
-<img
-src="http://www.galil.com/sites/default/files/products/dmc-41x3_big_0.png" alt="Galil" />
-
 ### Setting up.
 
-To begin, you must insert a configuration into your service
-configurations table. The keys required are `host` and `port`, and the
-service key must be `galil` (all lower case).
+Run your meteor applications with settings. The following keys are
+required to run it.
 
 ```
-ServiceConfiguration.configurations.upsert({ service: 'galil' }, {
-  $set: {
-    host: '192.168.0.3',
-    port: 23
-  }
-})
-```
-
-The package exports a collection called "GalilMessages". You can use
-this in your templates pretty easily to see the messages returned by the
-Galil controller. Here is an example setup with publications and live
-templates.
-
-```
-if (Meteor.isServer) {
-  Meteor.publish('galil_messages', function () {
-    return GalilMessages.find();
-  });
-}
-
-if (Meteor.isClient) {
-  Template.yourTemplate.onCreated(function () {
-    Meteor.subscribe('galil_messages');
-  });
-
-  Template.yourTemplate.helpers({
-    messages: function () {
-      return GalilMessages.find();
+{
+  "galil": {
+    "connection": {
+      "host": "192.168.1.3",
+      "port": 23,
     },
-    formatTime: function (timestamp, formatString) {
-      return moment(timestamp).format(formatString);
-    }
-  });
+    "defaultTimeout": 10000
+  }
 }
 ```
 
-Then in your template you can simply use the `each` directive. The
-schema keys on GalilMessages are: `message`, `socket`, and `timestamp`.
+- 'galil.connection.host' must be of type `String`
+- 'galil.connection.port' must be of type `Number`
+- 'galil.defaultTimeout' must be of type `Number`
+
+You can change these with a setter.
 
 ```
-each messages
-  div(class="message {{socket}}")
-    p
-      strong
-        | {{ formatTime timestamp 'HH:MM:SS' }} Socket[{{ socket }}] =>
-      {{ message }}
+> Galil.config.connection = { port: 25 };
+{
+  "galil": {
+    "connection": {
+      "host": "192.168.1.3",
+      "port": 25,
+    }
+  }
+}
 ```
 
-### Usage of event handlers (server only)
-On the server, an event will be fired off when receiving specific
-messages. These are colon deliminated. For example, Take a subroutine like so
+### Reading messages from the controller
+
+The Galil controller exports with a collection `Galil.collection`. This
+will be written to whenever a message is received and has the following
+format.
+
+{
+  "socket": "messages",
+  "message": "Some data",
+  "timestamp": new Date,
+  "type": ""
+}
+
+- Socket is the socket that received this message. It could be either
+  `messages` or `commands`.
+
+- Message is the _parsed_ data received from the data event.
+
+- timestamp is the time that it was added to the collection
+
+- Type is the type of message it was. If you deliminate your messages on
+  something, it will be the 0th index.
+
+### Responding to events
+
+On the server, `Galil` extends EventEmitter. That means you can emit and
+respond to your own custom events.
 
 ```
-#MotionError
-MG "Error:Motion"
-```
+Galil._messages.addListener('connect', () =>
+this.emit('messages_connected'));
 
-You can subscribe to this event (on the server) to do something
-specific. Eg:
-
-```
-Galil.on('Error', function (errorCode) {
-  throw new Meteor.Error('GalilError', errorCode);
+Galil.on('messages_connected', () => {
+  console.log('The message socket is now connected!');
 });
+```
+
+### Synchronous Execution
+
+`Galil.execute` will send an execute command and wait for a message
+saying the event is done. You can configure the end message by setting
+the configuration variable of `routine_end`.
+
+```
+Galil.config.parser.routine_end = 'End';
+```
+
+You can also set a `defaultTimeout`. If no data is received for this
+period of time, throw an error.
+
+```
+Galil.config.defaultTimeout = 60 * 1000;  // one minute without data
+throws an error
+```
+
+To run a synchronous execution, pass the subroutine you wish to execute.
+
+```
+// Usage on the client
+Galil.execute('Startup', 60, function () {
+  console.log('Finished setup!')
+});
+
+// Usage on the server
+Galil.execute('Startup', 60);
 ```
 
