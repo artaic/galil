@@ -15,7 +15,7 @@ Package.onUse(function(api) {
 
   api.export('Galil', both);
   api.addFiles('lib/common.es6.js', both);
-  api.addFiles(['lib/parser.es6.js', 'lib/server.es6.js'], 'server');
+  api.addFiles(['lib/parser.es6.js', 'lib/server.es6.js', 'lib/connection.es6.js'], 'server');
   api.addFiles('lib/client.es6.js', 'client');
 
   api.addFiles('lib/wrappers/array.es6.js', both);
