@@ -1,8 +1,5 @@
 if (Meteor.isServer) {
   Meteor.startup(function() {
-    if (!process.env.GALIL_HOST || !process.env.GALIL_PORT) {
-      throw new Meteor.Error(`No connection specified\nPlease set GALIL_HOST and GALIL_PORT in environment.`);
-    }
   });
 
   Meteor.publish('galil_messages', function() {
@@ -11,6 +8,10 @@ if (Meteor.isServer) {
         timestamp: 1
       }
     });
+  });
+
+  Meteor.publish('galil_connection', function () {
+    return Galil.connections.find();
   });
 } else {
   Template.console.helpers({
@@ -33,11 +34,17 @@ if (Meteor.isServer) {
       return Galil.collection.find({
         socket: 'commands'
       }).count();
+    },
+    galilDisconnected: function () {
+      return !_.all(Galil.connections.find().map((doc) => {
+        return doc.status === 'connected';
+      }));
     }
   });
 
   Template.console.onCreated(function() {
-    let sub = Meteor.subscribe('galil_messages');
+    Meteor.subscribe('galil_messages');
+    Meteor.subscribe('galil_connection');
   });
 
   Template.console.events({

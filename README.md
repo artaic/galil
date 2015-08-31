@@ -134,3 +134,57 @@ Galil.execute('mySub', 60 * 1000, function () {
 // Usage on the server
 Galil.execute('mySub', 60 * 1000);
 ```
+
+### FAQ
+
+- How do I check if the Galil is connected?
+
+_current implementation: using mongo collections_
+
+`Galil` has a bound collection called "connections". This should update
+its status when its state changes. You can check this on the server.
+
+```
+// will return `true` if all the connections are ready.
+let connections = _.all(Galil.connections.find().map((doc) => {
+  return doc.status === 'connected';
+}));
+```
+
+This is live, so you can publish it to the client and it will update the
+connection if connection is ever lost. The following could be used to
+show connection status.
+
+```
+if (Meteor.isServer) {
+  Meteor.publish('galil_connection', function () {
+    return Galil.connections.find();
+  });
+} else {
+  Template.galil.onCreated(function () {
+    Meteor.subscribe('galil_connection');
+  });
+
+  Template.galil.helpers({
+    galilDisconnected: function () {
+      return _.all(Galil.connections.find().map((doc) => {
+        return doc.status === 'connected';
+      }));
+    }
+  });
+}
+```
+
+On your template, you can use these helpers fairly easily.
+
+```
+<input type="text" placeholder="enter command" disabled="{{
+galilDisconnected }}">
+```
+
+### TO DO
+
+- implement the ability to configure multiple galil controllers
+- find all galil controllers via device discovery on the network
+- create an interface for changing the current galil controller or
+  controller configuration.

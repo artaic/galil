@@ -9,7 +9,7 @@ check@1.0.5
 ddp@1.1.0
 deps@1.0.7
 ejson@1.0.6
-erasaur:meteor-lodash@0.1.0
+erasaur:meteor-lodash@3.10.1_1
 fastclick@1.0.3
 geojson-utils@1.0.3
 grigio:babel@0.1.7
@@ -37,7 +37,7 @@ reactive-var@1.0.5
 reload@1.1.3
 retry@1.0.3
 routepolicy@1.0.5
-rtaic:galil@0.0.1
+rtaic:galil@0.0.2
 session@1.1.0
 spacebars@1.0.6
 spacebars-compiler@1.0.6
