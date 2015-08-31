@@ -16,11 +16,16 @@
       <div class="panel panel-default">
         <div class="panel-heading">
           Commands
+          {{#if socketConnected 'commands'}}
+            <span class="badge">Connected</span>
+          {{else}}
+            <span class="badge">Disconnected</span>
+          {{/if}}
         </div>
         <div class="panel-body">
-          {{#each commands}}
-            <div class="{{ socket }} {{ type }}">
-            {{ message }}
+          {{#each socketMessages 'commands'}}
+            <div class="event {{ event }}">
+              {{ message }}
             </div>
           {{/each}}
         </div>
@@ -30,10 +35,15 @@
       <div class="panel panel-default">
         <div class="panel-heading">
           Messages
+          {{#if socketConnected 'messages'}}
+            <span class="badge">Connected</span>
+          {{else}}
+            <span class="badge">Disconnected</span>
+          {{/if}}
         </div>
         <div class="panel-body">
-          {{#each messages}}
-            <div class="{{ socket }} {{ type }}">
+          {{#each socketMessages 'messages'}}
+            <div class="event {{ event }}">
               {{ message }}
             </div>
           {{/each}}

@@ -1,6 +1,6 @@
 Package.describe({
   name: 'rtaic:galil',
-  version: '0.0.2',
+  version: '0.0.3',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -15,7 +15,7 @@ Package.onUse(function(api) {
 
   api.export('Galil', both);
   api.addFiles('lib/common.es6.js', both);
-  api.addFiles(['lib/parser.es6.js', 'lib/server.es6.js', 'lib/connection.es6.js'], 'server');
+  api.addFiles(['lib/parser.es6.js', 'lib/server.es6.js'], 'server');
   api.addFiles('lib/client.es6.js', 'client');
 
   api.addFiles('lib/wrappers/array.es6.js', both);
