@@ -1,6 +1,6 @@
 Package.describe({
   name: 'rtaic:galil',
-  version: '0.0.3',
+  version: '0.0.4',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -14,11 +14,15 @@ Package.onUse(function(api) {
   api.use('meteorhacks:async@1.0.0', 'server');
 
   api.export('Galil', both);
-  api.addFiles('lib/common.es6.js', both);
-  api.addFiles(['lib/parser.es6.js', 'lib/server.es6.js'], 'server');
-  api.addFiles('lib/client.es6.js', 'client');
 
-  api.addFiles('lib/wrappers/array.es6.js', both);
+  api.addFiles('lib/common.es6.js', both);
+  api.addFiles([
+    'lib/parser.es6.js',
+    'lib/server.es6.js',
+    'lib/wrappers/array.es6.js'
+  ], 'server');
+  api.addFiles('lib/client.es6.js', both);
+
 });
 
 Package.onTest(function(api) {
@@ -29,6 +33,3 @@ Package.onTest(function(api) {
   api.addFiles(['test/init.es6', 'test/connection.es6']);
 });
 
-Npm.depends({
-  'bluebird': '2.9.34'
-});
