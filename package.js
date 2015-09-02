@@ -1,6 +1,6 @@
 Package.describe({
-  name: 'rtaic:galil',
-  version: '0.0.4',
+  name: 'insightfil:galil',
+  version: '0.0.5',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -28,7 +28,7 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   var both = ['client', 'server'];
   api.use(['practicalmeteor:munit', 'grigio:babel', 'erasaur:meteor-lodash']);
-  api.use('rtaic:galil');
+  api.use('insightfil:galil');
 
   api.addFiles(['test/init.es6', 'test/connection.es6']);
 });
