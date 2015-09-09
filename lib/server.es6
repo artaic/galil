@@ -1,6 +1,11 @@
 let net = Npm.require('net');
+let Future = Npm.require('fibers/future');
 
-Galil.connections._ensureIndex({ name: 1 }, { unique: 1 });
+Galil.connections._ensureIndex({
+  name: 1
+}, {
+  unique: 1
+});
 
 /**
  * Galil controller for server methods
@@ -35,24 +40,48 @@ Galil.connections._ensureIndex({ name: 1 }, { unique: 1 });
 
 Galil._createConnection = function(name) {
   check(name, String);
-  Galil.connections.upsert({ name: name }, {
-    $set: { status: 'disconnected' },
-    $setOnInsert: { messages: [] }
+  Galil.connections.upsert({
+    name: name
+  }, {
+    $set: {
+      status: 'disconnected'
+    },
+    $setOnInsert: {
+      messages: []
+    }
   });
 
-  let socket = net.connect(this.config.connection, Meteor.bindEnvironment(function () {
-    Galil.connections.update({ name: name }, { $set: { status: 'connected' } });
+  let socket = net.connect(this.config.connection, Meteor.bindEnvironment(function() {
+    Galil.connections.update({
+      name: name
+    }, {
+      $set: {
+        status: 'connected'
+      }
+    });
   }));
 
   socket._name = name;
   socket.setEncoding('ascii');
 
-  let setConnectionClosed = function () {
-    return Galil.connections.update({ name: socket._name }, { $set: { status: 'disconnected' } });
+  let setConnectionClosed = function() {
+    return Galil.connections.update({
+      name: socket._name
+    }, {
+      $set: {
+        status: 'disconnected'
+      }
+    });
   }
 
   socket.addListener('connect', Meteor.bindEnvironment(() => {
-    this.connections.update({ name: socket._name }, { $set: { status: 'connected' } });
+    this.connections.update({
+      name: socket._name
+    }, {
+      $set: {
+        status: 'connected'
+      }
+    });
   }));
   socket.addListener('timeout', Meteor.bindEnvironment(setConnectionClosed));
   socket.addListener('close', Meteor.bindEnvironment(setConnectionClosed));
@@ -63,7 +92,9 @@ Galil._createConnection = function(name) {
 
   socket.addListener('data', Meteor.bindEnvironment((data) => {
     let args = this.parse(data);
-    this.connections.update({ name: socket._name }, {
+    this.connections.update({
+      name: socket._name
+    }, {
       $push: {
         messages: {
           $each: [{
@@ -71,7 +102,9 @@ Galil._createConnection = function(name) {
             timestamp: new Date,
             event: args[0]
           }],
-          $sort: { timestamp: 1 },
+          $sort: {
+            timestamp: 1
+          },
           $slice: this.config.messageLimit * -1 || -200
         }
       },
@@ -92,6 +125,21 @@ Galil._messages.addListener('data', Meteor.bindEnvironment((data) => {
 }));
 
 /**
+ * Waits for an event to be received or a timeout to return
+ * In a "synchronous" style.
+ *
+ * @param {String} eventName the event bound to the galil controller.
+ * @param {Function} fn the function to run and wait on
+ * @param {Function} [_.noop] callback what do do after completed.
+ */
+Galil._waitForEvent = function(eventName, fn, callback) {
+  let future = new Future();
+  Galil.on(eventName, function() {});
+  Galil.on('Error', () => {});
+}
+
+
+/**
  * Execute a command on the galil controller
  * This will lock in execution synchronously with a fiber.
  * If no data is received for a specified amount of time, an error will be thrown.
@@ -109,34 +157,24 @@ Galil._messages.addListener('data', Meteor.bindEnvironment((data) => {
  *   console.log('Loading complete');
  * });
  */
-Galil.execute = function(program, seconds) {
-  check(program, String);
+Galil.execute = function(subroutine, milliseconds) {
+  check(subroutine, String);
+  check(milliseconds, Match.Optional(Number));
 
-  let timeout = _.isNumber(seconds) ? seconds * 1000 : this.config._defaultTimeout;
-  let timeoutError = new Meteor.Error('GalilError', 'CommandTimeout');
-  var timerId = Meteor.setTimeout(function () {}, timeout);
-  let refreshTimer = function (done, data) {
-    clearTimeout(timerId);
-    timerId = setTimeout(() => done(timeoutError), timeout);
-  }
+  let future = new Future();
+  let timeout = milliseconds || this.config.defaultTimeout;
 
-  let resp = Async.runSync((done) => {
-    this.on('End', (routine) => {
-      done(null, routine)
-    });
-    this.on('Error', (err) => {
-      done(err, null)
-    });
-    this._commands.write(`XQ#${program}\r`)
+  Meteor.setTimeout(() => {
+    future.return(new Meteor.Error('GalilTimeout', `Execution of ${subroutine} failed after ${timeout} milliseconds`));
+  }, timeout);
 
-    this._messages.addListener('data', refreshTimer.bind(this, done))
-    refreshTimer.bind(this, done);
-  });
+  this.on('End', Meteor.bindEnvironment((subroutine) => future.return(subroutine)));
+  this.on('Error', Meteor.bindEnvironment((args) => {
+    return future.return(new Meteor.Error('GalilError', args.join(':')));
+  }));
 
-  this._messages.removeListener('data', refreshTimer);
-
-  if (resp.error) throw resp.error;
-  return resp.response;
+  this._commands.write(`XQ#${subroutine}\r`, 'utf8');
+  return future.wait();
 };
 
 /**
@@ -160,11 +198,9 @@ Galil.execute = function(program, seconds) {
  */
 Galil.sendCommand = function(command) {
   check(command, String);
-  return new Promise((resolve, reject) => {
-    this._commands.write(`${command}\r`, 'utf8', () => {
-      resolve();
-    });
-  });
+  let future = new Future();
+  this._commands.write(`${command}\r`, 'utf8', () => future.return());
+  return future.wait();
 };
 
 /**
@@ -172,8 +208,7 @@ Galil.sendCommand = function(command) {
  *
  * @module Server/Galil
  * @method Galil#sendCommands
- * @param {String} commands pass in as many commands as you'll like and they'll execute in sequence.
- * @returns {Promise} a promise on `each` command
+ * @param {Array} commands pass in as many commands as you'll like and they'll execute in sequence.
  * @example
  * Galil.sendCommands('MG "Hello"', 'MG "Goodbye"').then(() => {
  *   console.log(Galil.connection.find().fetch());
@@ -189,10 +224,14 @@ Galil.sendCommand = function(command) {
  *  timestamp: sometime
  * }]
  */
-Galil.sendCommands = function() {
-  let args = Array.prototype.slice.call(arguments);
-  return args.reduce((p, bit) => {
-    return p.then(() => this.sendCommand(bit));
-  }, Promise.resolve());
-}
+Galil.sendCommands = function(commands) {
+  check(commands, Array);
 
+  let futures = _.map(commands, (command) => {
+    let future = new Future();
+    let onComplete = future.resolver();
+    this._commands.write(`${command}\r`, 'utf8', onComplete);
+    return future;
+  });
+  Future.wait(futures);
+}

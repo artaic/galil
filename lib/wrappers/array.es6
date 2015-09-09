@@ -21,7 +21,6 @@ _.extend(Galil, {
    * Galil.downloadArray('order', _.range(0, 300, 0));
    */
   downloadArray: function (arrayName, dmArray) {
-    console.log(arrayName, dmArray);
     check(arrayName, String);
     check(dmArray, Array);
     return this.sendCommand(`QD ${arrayName}[]\r${dmArray.join(',')}\\`);
