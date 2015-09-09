@@ -1,5 +1,4 @@
 let net = Npm.require('net');
-let EventEmitter = Npm.require('events').EventEmitter;
 
 Galil.connections._ensureIndex({ name: 1 }, { unique: 1 });
 
@@ -26,46 +25,56 @@ Galil.connections._ensureIndex({ name: 1 }, { unique: 1 });
  *
  * @emits Galil#connect when the socket is connected
  * @emits Galil#close when the socket closes
+ *
  * @param {String} name The name for the connection. Mostly used for humans to identify it.
  * @param {Function} onError Because this opens a `net.connect`, onError is passed as the Meteor.bindEnvironment callback
  * @throws Meteor.Error when the socket responds with an error
  * @returns {net.Socket} a new configured socket
  * @private
  */
+
 Galil._createConnection = function(name) {
   check(name, String);
-
-  Galil.connections.upsert({
-    name: name
-  }, {
+  Galil.connections.upsert({ name: name }, {
     $set: { status: 'disconnected' },
     $setOnInsert: { messages: [] }
   });
 
-  let socket = net.connect(this.config.connection);
+  let socket = net.connect(this.config.connection, Meteor.bindEnvironment(function () {
+    Galil.connections.update({ name: name }, { $set: { status: 'connected' } });
+  }));
+
   socket._name = name;
   socket.setEncoding('ascii');
 
-  let setStatus = (status) => Galil.connections.update({ name: socket._name }, { $set: { status: status }});
+  let setConnectionClosed = function () {
+    return Galil.connections.update({ name: socket._name }, { $set: { status: 'disconnected' } });
+  }
 
-  socket.addListener('connect', Meteor.bindEnvironment(() => setStatus('connected')));
-  socket.addListener('timeout', Meteor.bindEnvironment(() => setStatus('disconnected')));
-  socket.addListener('close', Meteor.bindEnvironment(() => setStatus('disconnected')));
+  socket.addListener('connect', Meteor.bindEnvironment(() => {
+    this.connections.update({ name: socket._name }, { $set: { status: 'connected' } });
+  }));
+  socket.addListener('timeout', Meteor.bindEnvironment(setConnectionClosed));
+  socket.addListener('close', Meteor.bindEnvironment(setConnectionClosed));
   socket.addListener('error', Meteor.bindEnvironment((error) => {
-    setStatus('disconnected');
+    setConnectionClosed();
     throw new Meteor.Error(error);
   }));
 
   socket.addListener('data', Meteor.bindEnvironment((data) => {
     let args = this.parse(data);
-    Galil.connections.update({ name: socket._name }, {
+    this.connections.update({ name: socket._name }, {
       $push: {
         messages: {
-          message: args.join(' ').replace(this.config.parser._delimiter, ''),
-          timestamp: new Date,
-          event: args[0]
+          $each: [{
+            message: args.join(' ').replace(this.config.parser._delimiter, ''),
+            timestamp: new Date,
+            event: args[0]
+          }],
+          $sort: { timestamp: 1 },
+          $slice: this.config.messageLimit * -1 || -200
         }
-      }
+      },
     });
   }));
 

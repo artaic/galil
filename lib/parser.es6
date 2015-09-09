@@ -51,7 +51,6 @@ Object.defineProperties(Galil.config.parser, {
  */
 Galil.parse = function (data) {
   check(data, Match.OneOf(String, Buffer));
-
   let conf = this.config.parser;
   let str = _.trim(data.toString('ascii'));
   if (str === conf._invalid) {
@@ -59,7 +58,7 @@ Galil.parse = function (data) {
   } else if (str === ':') {
     return ['Ok'];
   } else {
-    return _.trim(data.toString('ascii')).split(conf._linesep);
+    return str.split(conf._linesep);
   }
 }
 

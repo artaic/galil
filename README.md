@@ -6,58 +6,31 @@ This package uses sockets to communicate with the controller over an Ethernet
 connection and has been tested on several DMC 41x3 "Econo" motion controllers 
 but may also work with other models.
 
-<img
-src="http://www.galil.com/sites/default/files/products/dmc-41x3_big_0.png" alt="Galil" />
+![Galil](http://www.galil.com/sites/default/files/products/dmc-41x3_big_0.png)
 
 This software, while highly functional, is being provided under an MIT open 
 source license, and thus is provided as-is without warranty of any kind.
 
 ### Setting Up
 
-Configure your Galil controller through its configuration object. The 
-following keys are required to run it:
+There are two required environment variables:
 
-```
-{
-  "galil": {
-    "connection": {
-      "host": "192.168.1.3",
-      "port": 23,
-    },
-    "defaultTimeout": 10000
-  }
-}
-```
+- **GALIL\_HOST** the host to connect to
+- **GALIL\_PORT** the port to use.
 
-- 'galil.connection.host' must be of type `String`
-- 'galil.connection.port' must be of type `Number`
-- 'galil.defaultTimeout' must be of type `Number`
+### Configuration
 
-You can change these with a setter:
-
-```
-> Galil.config.connection = { port: 25 };
-{
-  "galil": {
-    "connection": {
-      "host": "192.168.1.3",
-      "port": 25,
-    }
-  }
-}
-```
-
-Typically you will install a program on the controller using Galil's
-GalilTools software and execute subroutines within your program:
+In order to use synchronous execution, you must have a token that will
+denote the start and end of a subroutine.
 
 ```
 test.dmc
 
 #mySub
-MG "mySub:Start"
+MG "Start:mySub"
 WT 5000
 MG "Waited five seconds."
-MG "mySub:End"
+MG "End:mySub"
 ```
 
 In this example, we've provided some additional messages at the beginning and

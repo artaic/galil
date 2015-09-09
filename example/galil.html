@@ -5,59 +5,45 @@
 </head>
 
 <body>
-  <div class="console">
+  <main>
+    <div class="row">
+      <div class="col-md-6">
+        {{>socket name="commands"}}
+      </div>
+      <div class="col-md-6">
+        {{>socket name="messages"}}
+      </div>
+    </div>
+  </main>
+  <footer class="galil-commands">
     {{>console}}
-  </div>
+  </footer>
 </body>
 
 <template name="console">
-  <div class="row">
-    <div class="col-md-6">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          Commands
-          {{#if socketConnected 'commands'}}
-            <span class="badge">Connected</span>
-          {{else}}
-            <span class="badge">Disconnected</span>
-          {{/if}}
-        </div>
-        <div class="panel-body">
-          {{#each socketMessages 'commands'}}
-            <div class="event {{ event }}">
-              {{ message }}
-            </div>
-          {{/each}}
-        </div>
+  <form id="command-form">
+    <div class="input-group">
+      <span class="input-group-addon" id="basic-addon1">></span>
+      <input type="text" class="form-control" placeholder="Enter command" aria-describedby="basic-addon1" disabled="{{ galilDisconnected }}">
+    </div>
+  </form>
+</template>
+
+<template name="socket">
+  {{#with socket name}}
+    <div class="panel panel-default socket">
+      <div class="panel-heading">
+        {{name}}
+        <span class="badge">{{status}}</span>
+      </div>
+      <div class="panel-body">
+        {{#each messages}}
+          <div class="event {{event}}">
+            {{message}}
+          </div>
+        {{/each}}
       </div>
     </div>
-    <div class="col-md-6">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          Messages
-          {{#if socketConnected 'messages'}}
-            <span class="badge">Connected</span>
-          {{else}}
-            <span class="badge">Disconnected</span>
-          {{/if}}
-        </div>
-        <div class="panel-body">
-          {{#each socketMessages 'messages'}}
-            <div class="event {{ event }}">
-              {{ message }}
-            </div>
-          {{/each}}
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="galil-commands">
-    <form id="command-form">
-      <div class="input-group">
-        <span class="input-group-addon" id="basic-addon1">></span>
-        <input type="text" class="form-control" placeholder="Enter command" aria-describedby="basic-addon1" disabled="{{ galilDisconnected }}">
-      </div>
-    </form>
-  </div>
+  {{/with}}
 </template>
 
