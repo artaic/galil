@@ -12,7 +12,7 @@ if (_.isUndefined(Galil)) {
 
   let setConnectedStatus = function() {
     Galil.connected = _.all(Galil.connections.find().map((doc) => {
-      doc.status === 'connected'
+      return doc.status === 'connected';
     }));
   }
 
@@ -23,9 +23,8 @@ if (_.isUndefined(Galil)) {
   });
 
   if (Meteor.isServer) {
-    check(process.env.GALIL_HOST, String);
-    check(process.env.GALIL_PORT, Match.OneOf(String, Number));
-    _.defaults(Galil.config, {
+    Meteor.settings = Meteor.settings || {};
+    _.defaultsDeep(Meteor.settings, {
       connection: {
         port: Number(process.env.GALIL_PORT),
         host: process.env.GALIL_HOST
@@ -34,4 +33,5 @@ if (_.isUndefined(Galil)) {
       messageLimit: 200
     });
   }
+  _.defaultsDeep(Galil.config, Meteor.settings);
 }

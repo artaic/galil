@@ -1,11 +1,7 @@
 let net = Npm.require('net');
 let Future = Npm.require('fibers/future');
 
-Galil.connections._ensureIndex({
-  name: 1
-}, {
-  unique: 1
-});
+Galil.connections._ensureIndex({ name: 1 }, { unique: 1 });
 
 /**
  * Galil controller for server methods
@@ -43,21 +39,15 @@ Galil._createConnection = function(name) {
   Galil.connections.upsert({
     name: name
   }, {
-    $set: {
-      status: 'disconnected'
-    },
-    $setOnInsert: {
-      messages: []
-    }
+    $set: { status: 'disconnected' },
+    $setOnInsert: { messages: [] }
   });
 
   let socket = net.connect(this.config.connection, Meteor.bindEnvironment(function() {
     Galil.connections.update({
       name: name
     }, {
-      $set: {
-        status: 'connected'
-      }
+      $set: { status: 'connected' }
     });
   }));
 
@@ -68,9 +58,7 @@ Galil._createConnection = function(name) {
     return Galil.connections.update({
       name: socket._name
     }, {
-      $set: {
-        status: 'disconnected'
-      }
+      $set: { status: 'disconnected' }
     });
   }
 
@@ -78,11 +66,10 @@ Galil._createConnection = function(name) {
     this.connections.update({
       name: socket._name
     }, {
-      $set: {
-        status: 'connected'
-      }
+      $set: { status: 'connected' }
     });
   }));
+
   socket.addListener('timeout', Meteor.bindEnvironment(setConnectionClosed));
   socket.addListener('close', Meteor.bindEnvironment(setConnectionClosed));
   socket.addListener('error', Meteor.bindEnvironment((error) => {
@@ -92,6 +79,11 @@ Galil._createConnection = function(name) {
 
   socket.addListener('data', Meteor.bindEnvironment((data) => {
     let args = this.parse(data);
+
+    if (args[0] === 'Error') {
+      this.emit('Error', ['command not recognized']);
+    }
+
     this.connections.update({
       name: socket._name
     }, {
@@ -102,9 +94,7 @@ Galil._createConnection = function(name) {
             timestamp: new Date,
             event: args[0]
           }],
-          $sort: {
-            timestamp: 1
-          },
+          $sort: { timestamp: 1 },
           $slice: this.config.messageLimit * -1 || -200
         }
       },
@@ -164,16 +154,26 @@ Galil.execute = function(subroutine, milliseconds) {
   let future = new Future();
   let timeout = milliseconds || this.config.defaultTimeout;
 
-  Meteor.setTimeout(() => {
-    future.return(new Meteor.Error('GalilTimeout', `Execution of ${subroutine} failed after ${timeout} milliseconds`));
+  let timeoutId = Meteor.setTimeout(() => {
+    return future.return(new Meteor.Error('GalilTimeout', `Execution of ${subroutine} failed after ${timeout} milliseconds`));
   }, timeout);
 
-  this.on('End', Meteor.bindEnvironment((subroutine) => future.return(subroutine)));
-  this.on('Error', Meteor.bindEnvironment((args) => {
+  let onSuccess = function () {
+    Meteor.clearTimeout(timeoutId);
+    return future.return({
+      status: 'success',
+      name: subroutine
+    });
+  }
+  let onError = function (args) {
+    Meteor.clearTimeout(timeoutId);
     return future.return(new Meteor.Error('GalilError', args.join(':')));
-  }));
+  }
 
+  this.addListener('End', Meteor.bindEnvironment(onSuccess));
+  this.addListener('Error', Meteor.bindEnvironment(onError));
   this._commands.write(`XQ#${subroutine}\r`, 'utf8');
+
   return future.wait();
 };
 
@@ -197,10 +197,8 @@ Galil.execute = function(subroutine, milliseconds) {
  * }]
  */
 Galil.sendCommand = function(command) {
-  check(command, String);
-  let future = new Future();
-  this._commands.write(`${command}\r`, 'utf8', () => future.return());
-  return future.wait();
+  check(command, Match.OneOf(String, Array));
+  this.sendCommands(command);
 };
 
 /**
@@ -225,7 +223,11 @@ Galil.sendCommand = function(command) {
  * }]
  */
 Galil.sendCommands = function(commands) {
-  check(commands, Array);
+  check(commands, Match.OneOf(Array, String));
+
+  if (_.isString(commands)) {
+    commands = [commands];
+  }
 
   let futures = _.map(commands, (command) => {
     let future = new Future();
@@ -235,3 +237,4 @@ Galil.sendCommands = function(commands) {
   });
   Future.wait(futures);
 }
+

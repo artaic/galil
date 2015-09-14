@@ -23,7 +23,8 @@ _.extend(Galil, {
   downloadArray: function (arrayName, dmArray) {
     check(arrayName, String);
     check(dmArray, Array);
-    return this.sendCommand(`QD ${arrayName}[]\r${dmArray.join(',')}\\`);
+
+    this.sendCommand(`QD ${arrayName}[]\r${dmArray.join(',')}\\`);
   },
 
   /**
@@ -36,9 +37,9 @@ _.extend(Galil, {
    */
   uploadArray: function (arrayName) {
     check(arrayName, String);
-    this.sendCommand(`MG "Array ${arrayName}[]"`).then(() => {
-      this.sendCommand(`QU ${arrayName}[]`);
-    });
+
+    this.sendCommand(`MG "Array ${arrayName}[]"`);
+    this.sendCommand(`QU ${arrayName}[]`);
   }
 });
 
