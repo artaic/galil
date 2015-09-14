@@ -3,10 +3,11 @@
   <meta name="viewport" content="width=device-width, user-scalable=no">
   <link href='https://fonts.googleapis.com/css?family=PT+Sans+Narrow' rel='stylesheet' type='text/css'>
 </head>
+<body>{{>base}}</body>
 
-<body>
-  <main>
-    <div class="row">
+<template name="base">
+  <main class="content">
+    <div class="row fill-space">
       <div class="col-md-6">
         {{>socket name="commands"}}
       </div>
@@ -16,14 +17,23 @@
     </div>
   </main>
   <footer class="galil-commands">
+    {{>subroutines}}
     {{>console}}
   </footer>
-</body>
+</template>
+
+<template name="subroutines">
+  <div class="row">
+    <div class="col-md-12">
+      <button data-action="startup" class="btn btn-lg btn-block btn-primary">Initiate Startup Subroutine</button>
+    </div>
+  </div>
+</template>
 
 <template name="console">
   <form id="command-form">
     <div class="input-group">
-      <span class="input-group-addon" id="basic-addon1">></span>
+      <span class="input-group-addon" id="basic-addon1"></span>
       <input type="text" class="form-control" placeholder="Enter command" aria-describedby="basic-addon1" disabled="{{ galilDisconnected }}">
     </div>
   </form>

@@ -151,27 +151,39 @@ Galil.execute = function(subroutine, milliseconds) {
   check(subroutine, String);
   check(milliseconds, Match.Optional(Number));
 
+  let listeners = this.listeners();
+  console.log(listeners);
+  this.removeAllListeners();
+
   let future = new Future();
   let timeout = milliseconds || this.config.defaultTimeout;
 
   let timeoutId = Meteor.setTimeout(() => {
-    return future.return(new Meteor.Error('GalilTimeout', `Execution of ${subroutine} failed after ${timeout} milliseconds`));
+    future.return(new Meteor.Error('GalilTimeout', `Execution of ${subroutine} failed after ${timeout} milliseconds`));
   }, timeout);
 
   let onSuccess = function () {
+    _.each(listeners, (listener) => {
+      this.addListener(listener);
+    });
     Meteor.clearTimeout(timeoutId);
-    return future.return({
+    future.return({
       status: 'success',
       name: subroutine
     });
-  }
+  }.bind(this);
+
   let onError = function (args) {
+    _.each(listeners, (listener) => {
+      this.addListener(listener);
+    });
     Meteor.clearTimeout(timeoutId);
-    return future.return(new Meteor.Error('GalilError', args.join(':')));
-  }
+    future.return(new Meteor.Error('GalilError', args.join(':')));
+  }.bind(this);
 
   this.addListener('End', Meteor.bindEnvironment(onSuccess));
   this.addListener('Error', Meteor.bindEnvironment(onError));
+
   this._commands.write(`XQ#${subroutine}\r`, 'utf8');
 
   return future.wait();

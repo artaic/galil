@@ -30,7 +30,7 @@ if (_.isUndefined(Galil)) {
         host: process.env.GALIL_HOST
       },
       defaultTimeout: 60 * 1000,
-      messageLimit: 200
+      messageLimit: 50
     });
   }
   _.defaultsDeep(Galil.config, Meteor.settings);
