@@ -1,37 +1,38 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '0.2.3',
+  version: '0.2.4',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('1.1.0.3');
+  api.versionsFrom('1.2.0.1');
   var both = ['client', 'server'];
 
   api.use([
     'mongo',
     'check',
-    'grigio:babel@0.1.7',
+    'ecmascript',
     'erasaur:meteor-lodash@3.10.1'
   ]);
 
   api.export('Galil', both);
 
-  api.addFiles(['lib/common.es6', 'lib/parser.es6'], both);
   api.addFiles([
-    'lib/server.es6',
-    'lib/wrappers/array.es6'
-  ], 'server');
-  api.addFiles('lib/client.es6', both);
+    'lib/common.js',
+    'lib/parser.js'
+  ], both);
 
+  api.addFiles([
+    'lib/server.js',
+    'lib/wrappers/array.js'
+  ], 'server');
 });
 
 Package.onTest(function(api) {
-  var both = ['client', 'server'];
-  api.use(['practicalmeteor:munit', 'grigio:babel', 'erasaur:meteor-lodash']);
+  api.use(['practicalmeteor:munit', 'ecmascript', 'erasaur:meteor-lodash']);
   api.use('insightfil:galil');
 
-  api.addFiles(['test/init.es6', 'test/connection.es6']);
+  api.addFiles(['test/init.js', 'test/connection.js']);
 });
