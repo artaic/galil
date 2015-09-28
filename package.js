@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '0.2.4',
+  version: '0.2.5',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -14,6 +14,8 @@ Package.onUse(function(api) {
     'mongo',
     'check',
     'ecmascript',
+    'es5-shim',
+    'promise',
     'erasaur:meteor-lodash@3.10.1'
   ]);
 

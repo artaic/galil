@@ -50,9 +50,9 @@ _.extend(Galil, {
     let parseData = function (data) {
       let str = _.trim(data.toString('ascii')).split('\r');
       let status = _.last(str);
-      results += data.toString('ascii');
+      results += _.trim(data.toString('ascii'));
       if (status === encodings.done) {
-        done(null, results.split('\r').map((s) => s.replace(String.fromCharCode('32'), '')).slice(0, -1));
+        done(null, results.split(', '));
       } else if (status === encodings.error) {
         done(new Meteor.Error(`GalilError`, `Command not recognized`));
       }
