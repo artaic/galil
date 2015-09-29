@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '0.2.5',
+  version: '0.2.6',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
