@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '0.2.6',
+  version: '1.0.0',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -17,15 +17,13 @@ Package.onUse(function(api) {
     'es5-shim',
     'promise',
     'erasaur:meteor-lodash@3.10.1'
-  ]);
+  ], both);
+  api.use('reactive-var', 'client')
 
   api.export('Galil', both);
 
-  api.addFiles([
-    'lib/common.js',
-    'lib/parser.js'
-  ], both);
-
+  api.addFiles('lib/common.js', both);
+  api.addFiles('lib/client.js', 'client');
   api.addFiles([
     'lib/server.js',
     'lib/wrappers/array.js'

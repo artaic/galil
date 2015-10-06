@@ -43,6 +43,57 @@ To execute this subroutine using GalilTools, you'd use the XQ firmware command:
 XQ #mySub
 ```
 
+### Reactive data sources
+
+There are a couple of reactive data sources on the client.
+
+- Galil.status();
+
+This is very similar to
+[Meteor.status()](https://devdocs.io/meteor/index#meteor_status), but
+without retryCount. It will return the current status of the Galil controller's connection.
+Returns `connected` if all established connections are available.
+`status` has the same values as `Meteor.status().status`.
+
+- Galil.executing()
+
+Returns true if a subroutine is currently in execution. Example usage:
+
+```
+// disable if executing.
+button(data-action="startup" disabled="{{Galil.executing}}")
+```
+
+- Galil.lastMessage()
+
+Returns the last message emitted by each connection.
+
+### Responding to errors
+
+Right now, the methods to respond to errors is fairly anemic, but here
+is some basics:
+
+#### Connection errors
+You can scan `Galil.status()` in order to handle the errors in the
+connection. For example:
+
+```
+if (Galil.status().status === 'disconnected') {
+  notify('Galil is disconnected!', { type: 'error' })
+}
+```
+
+#### Command errors
+
+When a command fails, you will find a `?` a your last message. Here is a
+way to respond to it:
+
+```
+if (_.last(Galil.lastMessage()) === '?') {
+  notify('Command failed with status ?');
+}
+```
+
 ### Interacting with the Controller
 
 The Galil package exports with a collection `Galil.collection`. This

@@ -8,12 +8,9 @@ let connectionSuite = {
     name: 'Galil should be connected on initialization',
     type: 'server',
     func: function (test) {
-      test.isTrue(Galil._commands._connected);
-      test.isTrue(Galil._messages._connected);
-      test.isTrue(Galil.connected);
     }
   }, {
-    name: 'Changing connection parameters should attempt a reconnect',
+    name: '`Galil._createConnection` should be able to create a valid connection',
     type: 'server',
     func: function (test) {
     }
