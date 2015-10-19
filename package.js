@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '1.0.1',
+  version: '1.0.3',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -25,6 +25,7 @@ Package.onUse(function(api) {
   api.addFiles('lib/common.js', both);
   api.addFiles('lib/client.js', 'client');
   api.addFiles([
+    'lib/connection.js',
     'lib/server.js',
     'lib/wrappers/array.js'
   ], 'server');
@@ -35,5 +36,9 @@ Package.onTest(function(api) {
   api.use('insightfil:galil');
 
   api.addFiles(['test/init.js', 'test/connection.js']);
+});
+
+Npm.depends({
+  'xregexp': '3.0.0'
 });
 

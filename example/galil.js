@@ -1,4 +1,8 @@
 if (Meteor.isServer) {
+  Meteor.startup(function () {
+    Galil.connect(23, '169.254.248.255');
+  });
+
   Meteor.publish('galil_connection', function(name) {
     return Galil.connections.find({ name: name });
   });
@@ -10,14 +14,10 @@ if (Meteor.isServer) {
   });
 
   Meteor.methods({
-    'testStartup': function (documentId) {
-      check(documentId, String);
-      Galil.sendCommand(`MG "Initiating startup"`);
-      Galil.sendCommands(`MG_XQ0`);
-      Galil.sendCommands([
-        `MG "Setting documentId variable to new value: ${documentId}"`,
-      ]);
-      return Galil.execute('Startup');
+    'test startup': function () {
+      console.log('Calling startup');
+      Galil.sendCommand('MG "Hello"');
+      Galil.execute('Startup', /^End:Startup$/);
     }
   });
 } else {
@@ -27,23 +27,16 @@ if (Meteor.isServer) {
 
   Template.socket.helpers({
     socket: function (name) {
-      let sub = Meteor.subscribe('galil_connection', name);
-      if (sub.ready()) {
-        let conn = Galil.connections.findOne({
-          name: name
-        });
-        conn.messages.map((m) => {
-          m.message.replace(Galil.config.parser.linesep, '<br/>');
-        });
-        return conn;
-      }
+      return Galil.connections.findOne({
+        name: name
+      });
     }
   });
 
   Template.subroutines.events({
     'click button[data-action="startup"]': function (e, template) {
       $(e.target).attr('disabled', true);
-      Meteor.call('testStartup', Session.get('documentId'), function () {
+      Meteor.call('test startup', Session.get('documentId'), function () {
         $(e.target).attr('disabled', false);
       });
     }
