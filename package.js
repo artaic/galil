@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '1.1.0',
+  version: '1.1.1',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -16,6 +16,7 @@ Package.onUse(function(api) {
     'ecmascript',
     'es5-shim',
     'promise',
+    'tracker',
     'erasaur:meteor-lodash@3.10.1'
   ], both);
   api.use('reactive-var', 'client')

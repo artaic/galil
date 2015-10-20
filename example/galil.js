@@ -3,10 +3,6 @@ if (Meteor.isServer) {
     Galil.connect(23, '169.254.248.255');
   });
 
-  Meteor.publish('galil_connection', function(name) {
-    return Galil.connections.find({ name: name });
-  });
-
   Galil.connections.allow({
     update: function () {
       return true;
@@ -15,16 +11,14 @@ if (Meteor.isServer) {
 
   Meteor.methods({
     'test startup': function () {
-      console.log('Calling startup');
-      Galil.sendCommand('MG "Hello"');
-      Galil.execute('Startup', /^End:Startup$/);
+      return Galil.execute('Startup', /End:Startup/);
+    },
+    'send command': function (command) {
+      check(command, String);
+      return Galil.sendCommand(command);
     }
   });
 } else {
-  Template.console.onCreated(function () {
-    Session.setDefault('documentId', '1234');
-  });
-
   Template.socket.helpers({
     socket: function (name) {
       return Galil.connections.findOne({
@@ -36,7 +30,9 @@ if (Meteor.isServer) {
   Template.subroutines.events({
     'click button[data-action="startup"]': function (e, template) {
       $(e.target).attr('disabled', true);
-      Meteor.call('test startup', Session.get('documentId'), function () {
+      Meteor.call('test startup', function (err, result) {
+        console.log(err);
+        console.log(result);
         $(e.target).attr('disabled', false);
       });
     }
@@ -46,7 +42,7 @@ if (Meteor.isServer) {
     'submit form#command-form': function(e, template) {
       e.preventDefault();
       let input = $(e.target).find('input');
-      Meteor.call('Galil.sendCommand', input.val(), () => input.val(''));
+      Meteor.call('send command', input.val(), () => input.val(''));
     }
   });
 }
