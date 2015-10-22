@@ -28,6 +28,7 @@ Package.onUse(function(api) {
   api.addFiles([
     'lib/connection.js',
     'lib/server.js',
+    'lib/events.js',
     'lib/wrappers/array.js'
   ], 'server');
 });
