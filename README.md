@@ -128,6 +128,28 @@ Galil.on('messages_connected', () => {
 });
 ```
 
+### Adding hooks
+
+If you want to scan for a message, you can use `Galil.registerEvent` and
+`Galil.unregisterEvent`. The parameters are:
+
+- the regex to scan for
+- the handler function to make use of
+
+The handler function will apply the result of `exec` to the function.
+
+Example usage is like so:
+
+```
+Galil.registerEvent(/^(Arm|Fork):(Ready|Failed)$/, function (component, state) {
+  Components.update({
+    name: component
+  }, {
+    $set: { state: state }
+  });
+});
+```
+
 ### Synchronous Execution
 
 `Galil.execute` will send an execute command and wait for a message saying the 
