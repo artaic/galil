@@ -40,20 +40,24 @@
 </template>
 
 <template name="socket">
-  {{#with socket name}}
-    <div class="panel panel-default socket">
-      <div class="panel-heading">
-        {{name}}
-        <span class="badge">{{status}}</span>
+  {{#if Template.subscriptionsReady}}
+    {{#with socket name}}
+      <div class="panel panel-default socket">
+        <div class="panel-heading">
+          {{name}}
+          <span class="badge">{{connection.status}}</span>
+        </div>
+        <div class="panel-body">
+          {{#each messages}}
+            <div class="event {{event}}">
+              {{message}}
+            </div>
+          {{/each}}
+        </div>
       </div>
-      <div class="panel-body">
-        {{#each messages}}
-          <div class="event {{event}}">
-            {{message}}
-          </div>
-        {{/each}}
-      </div>
-    </div>
-  {{/with}}
+    {{/with}}
+  {{else}}
+    {{>spinner}}
+  {{/if}}
 </template>
 
