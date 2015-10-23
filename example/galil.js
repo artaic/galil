@@ -1,9 +1,5 @@
 if (Meteor.isServer) {
-  Meteor.startup(function () {
-    Galil.connect(23, '169.254.248.255');
-  });
-
-  Galil.connections.allow({
+  Galil.Connections.allow({
     update: function () {
       return true;
     }
@@ -21,7 +17,7 @@ if (Meteor.isServer) {
 } else {
   Template.socket.helpers({
     socket: function (name) {
-      return Galil.connections.findOne({
+      return Galil.Connections.findOne({
         name: name
       });
     }
