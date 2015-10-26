@@ -112,7 +112,7 @@ Galil.execute(`Startup`, /^Startup Complete$/, 3000);
 ### Responding to events
 
 If you want to watch for events, you can do it in a few ways. Listen is
-the easiest.
+the easiest. This works on both client and server.
 
 ```
 Meteor.methods({
