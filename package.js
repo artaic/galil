@@ -17,27 +17,29 @@ Package.onUse(function(api) {
     'es5-shim',
     'promise',
     'tracker',
-    'erasaur:meteor-lodash@3.10.1'
   ], both);
+
   api.use('reactive-var', 'client')
 
-  api.export('Galil', both);
+  api.export(['Galil', 'GalilConnections'], both);
+  api.export('GalilServer', 'server');
+  // api.export('GalilClient', 'client');
 
   api.addFiles('lib/common.js', both);
-  api.addFiles('lib/client.js', 'client');
   api.addFiles([
-    'lib/connection.js',
-    'lib/server.js',
-    'lib/events.js',
-    'lib/wrappers/array.js'
+    'lib/socket.js', 'lib/server.js'
   ], 'server');
 });
 
 Package.onTest(function(api) {
-  api.use(['practicalmeteor:munit', 'ecmascript', 'erasaur:meteor-lodash']);
+  api.use('ecmascript');
+  api.use('tinytest');
+  api.use('mongo');
   api.use('insightfil:galil');
 
-  api.addFiles(['test/init.js', 'test/connection.js']);
+  api.addFiles([
+    'tests/connection.js'
+  ], 'server');
 });
 
 Npm.depends({
