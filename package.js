@@ -14,21 +14,18 @@ Package.onUse(function(api) {
     'mongo',
     'check',
     'ecmascript',
-    'es5-shim',
     'promise',
     'tracker',
+    'reactive-var',
+    'random'
   ], both);
 
-  api.use('reactive-var', 'client')
-
-  api.export(['Galil', 'GalilConnections'], both);
-  api.export('GalilServer', 'server');
-  // api.export('GalilClient', 'client');
-
+  api.export(['Galil', 'GalilBase', 'GalilConnections'], both);
   api.addFiles('lib/common.js', both);
   api.addFiles([
     'lib/socket.js', 'lib/server.js'
   ], 'server');
+  api.addFiles('lib/client.js', 'client');
 });
 
 Package.onTest(function(api) {

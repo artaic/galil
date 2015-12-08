@@ -1,8 +1,10 @@
 {
-  "galil": {
-    "connection": {
-      "host": "169.254.248.225",
-      "port": 23
+  "public": {
+    "galil": {
+      "connection": {
+        "host": "169.254.248.225",
+        "port": 23
+      }
     }
   }
 }
