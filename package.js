@@ -7,29 +7,17 @@ Package.describe({
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('1.2.0.1');
-  var both = ['client', 'server'];
+  api.versionsFrom('1.2.1');
+  api.use(['mongo', 'check', 'ecmascript', 'promise']);
 
-  api.use([
-    'mongo',
-    'check',
-    'ecmascript',
-    'es5-shim',
-    'promise',
-    'tracker',
-    'erasaur:meteor-lodash@3.10.1'
-  ], both);
-  api.use('reactive-var', 'client')
+  api.export('GalilConnections');
+  api.export('GalilSocket', 'server');
+  api.export('Galil', 'server');
 
-  api.export('Galil', both);
-
-  api.addFiles('lib/common.js', both);
-  api.addFiles('lib/client.js', 'client');
+  api.addFiles('connections.js');
   api.addFiles([
-    'lib/connection.js',
-    'lib/server.js',
-    'lib/events.js',
-    'lib/wrappers/array.js'
+    'lib/sockets.js',
+    'lib/galil.js'
   ], 'server');
 });
 
