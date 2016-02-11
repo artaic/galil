@@ -9,7 +9,7 @@ _.extend(Galil, {
    * @method list
    */
   listArrays: function () {
-    return this.sendCommand('LA');
+    return Promise.await(this.sendCommand('LA'));
   },
 
   /**

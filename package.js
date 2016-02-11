@@ -16,8 +16,9 @@ Package.onUse(function(api) {
 
   api.addFiles('connections.js');
   api.addFiles([
-    'lib/sockets.js',
-    'lib/galil.js'
+    'sockets.js',
+    'galil.js',
+    'array.js'
   ], 'server');
 });
 
@@ -29,6 +30,7 @@ Package.onTest(function(api) {
 });
 
 Npm.depends({
-  'xregexp': '3.0.0'
+  'xregexp': '3.0.0',
+  'colors': '1.1.2'
 });
 
