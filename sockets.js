@@ -6,30 +6,15 @@ const Socket = Npm.require('net').Socket;
 GalilSocket = class GalilSocket extends Socket {
   constructor(name) {
     super();
-
-    this._name = name;
-    this._delimiter = /(?:\r\n)+/;  // this is what every message contains and can be split on.
-
-    GalilConnections.upsert({
-      name: this._name
-    }, {
-      $set: {
-        connection: {
-          status: 'disconnected',
-          retryCount: 0,
-          retryTime: null,
-          reason: null
-        }
-      },
-      $setOnInsert: {
-        messages: [],
-        tail: []
-      }
-    });
-
     this.setEncoding('ascii');
 
-    this.on('data', Meteor.bindEnvironment(data => {
+    check(name, String);
+    this._name = name;
+    this._delimiter = /(?:\r\n)+/;  // this is what every message contains and can be split on.
+    this._connections = GalilConnections;
+    this._createOrUpdateDocument();
+
+    let listen = Meteor.bindEnvironment((data) => {
       const original = util.inspect(data, { showHidden: true });
       const tokens = data.split(this._delimiter).filter(Boolean);
 
@@ -56,60 +41,69 @@ GalilSocket = class GalilSocket extends Socket {
           console.log(`  [${this._name.toUpperCase()}] ${message}`);
         });
       }
-    }));
+    });
+
+    this.removeListener('data', listen);
+    this.on('data', listen);
+  }
+  _createOrUpdateDocument() {
+    GalilConnections.upsert({
+      name: this._name
+    }, {
+      $set: {
+        connection: {
+          status: 'disconnected',
+          retryCount: 0,
+          retryTime: null,
+          reason: null
+        }
+      },
+      $setOnInsert: {
+        messages: [],
+        tail: [],
+        name: this._name
+      }
+    });
   }
   connect() {
-    const RETRY_INTERVAL = 5000;
-    const MAX_RETRIES = 5;
-
-    const reconnect = Meteor.bindEnvironment(() => {
-      const config = GalilConnections.findOne({ name: this._name });
-      if (config.connection.retryCount > MAX_RETRIES) {
-        GalilConnections.upsert({
-          name: this._name
-        }, {
-          $set: {
-            'connection.status': 'connecting',
-            'connection.retryTime': new Date()
-          },
-          $inc: { 'connection.retryCount': 1 }
-        });
-        Meteor.setTimeout(this.connect(...arguments), RETRY_INTERVAL);
-      } else {
-        GalilConnections.upsert({
-          name: this._name
-        }, {
-          $set: {
-            'connection.status': 'failed',
-            'connection.reason': 'Max retries exceeded'
-          }
-        });
+    GalilConnections.update({ name: this._name }, {
+      $set: {
+        'connection.status': 'connecting',
+        'connection.retryTime': new Date()
       }
     });
 
-    this.on('close', reconnect);
-
-    this.once('connect', Meteor.bindEnvironment(() => {
-      this.removeListener('close', reconnect);
-      GalilConnections.upsert({
+    const retry = Meteor.bindEnvironment(() => {
+      GalilConnections.update({
         name: this._name
       }, {
         $set: {
-          connection: {
-            status: 'connected',
-            retryCount: 0,
-            reason: null,
-            address: this.address()
-          }
+          'connection.status': 'connecting',
+          'connection.retryTime': new Date(),
+        },
+        $inc: {
+          'connection.retryCount': 1
         }
       });
+      this.connect(...arguments);
+    }.bind(this, Array.from(arguments)));
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Connected galil socket: ${this._name}`);
-      }
-    }));
+    this.removeListener('close', retry);
 
-    this.once('error', Meteor.bindEnvironment(err => {
+    this.once('connect', Meteor.bindEnvironment(() => {
+      GalilConnections.update({
+        name: this._name
+      }, {
+        $set: {
+          'connection.status': 'connected',
+          'connection.address': this.address(),
+          'connection.retryCount': 0,
+          'connection.retryTime': null,
+          'connection.reason': null
+        },
+      });
+    })).once('error', Meteor.bindEnvironment(err => {
+      this.removeListener('close', retry);
       GalilConnections.upsert({
         name: this._name
       }, {
@@ -120,27 +114,13 @@ GalilSocket = class GalilSocket extends Socket {
           }
         }
       });
-      this.removeAllListeners();
-    }));
+    })).on('close', retry);
 
     super.connect(...arguments);
   }
   disconnect() {
-    this.once('close', Meteor.bindEnvironment(() => {
-      GalilConnections.update({
-        name: this._name
-      }, {
-        $set: {
-          connection: {
-            status: 'disconnected',
-            reason: null,
-            retryCount: 0,
-            retryTime: null
-          }
-        }
-      });
-    }));
-    this.close();
+    this.destroy();
+    this.emit('disconnect');
   }
   listenFor(regex, cb) {
     check(regex, Match.OneOf(RegExp, XRegExp));

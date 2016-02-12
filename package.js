@@ -23,14 +23,16 @@ Package.onUse(function(api) {
 });
 
 Package.onTest(function(api) {
-  api.use(['practicalmeteor:munit', 'ecmascript', 'erasaur:meteor-lodash']);
+  api.use(['tinytest', 'ecmascript', 'check', 'mongo']);
   api.use('insightfil:galil');
 
-  api.addFiles(['test/init.js', 'test/connection.js']);
+  api.addFiles([
+    'tests/socket.js'
+  ], 'server');
 });
 
 Npm.depends({
   'xregexp': '3.0.0',
-  'colors': '1.1.2'
+  'colors': '1.1.2',
 });
 

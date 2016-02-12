@@ -21,6 +21,12 @@ Galil = {
     if (process.env.NODE_ENV === 'development') {
     }
   },
+  set(variable, value) {
+    return this.sendCommand(`${variable}=${value}`);
+  },
+  get(variable) {
+    return this.sendCommand(`${variable}=`);
+  },
   connect() {
     this._messages.once('connect', Meteor.bindEnvironment((this._messages.write.bind(this._messages, 'CF I\r'))));
     this._commands.connect(...arguments);
@@ -58,7 +64,7 @@ Galil = {
     check(command, String);
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(colors.green(`  [>] ${command}`));
+      console.log(colors.green(`\n  [>] ${command}`));
     }
 
     let future = new Future();
@@ -148,5 +154,5 @@ Galil = {
 
     this.sendCommand(`XQ#${subroutine}`, timeout);
     this.awaitMessageSync(regex, timeout);
-  }
+  },
 }
