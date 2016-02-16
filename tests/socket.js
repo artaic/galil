@@ -1,6 +1,18 @@
 const NAME = 'test';
 const Server = Npm.require('net').Server;
 
+let resetCollection = function (name) {
+  const collection = this[name];
+  if (collection) {
+    collection.remove({});
+  } else {
+    this[name] = new Mongo.Collection(null);
+  }
+}
+
+let reset = function () {
+}
+
 class GalilServer extends Server {
   constructor() {
     super(...arguments);
@@ -34,8 +46,9 @@ Tinytest.add('GalilSocket and GalilConnections should export', function (test) {
 });
 
 Tinytest.add('Instancing a GalilSocket should upsert document', function (test) {
-  GalilConnections.remove({ name: NAME });
-  test.isUndefined(GalilConnections.findOne({ name: NAME }));
+  GalilConnections = new Mongo.Collection(null);
+  // GalilConnections.remove({ name: NAME });
+  // test.isUndefined(GalilConnections.findOne({ name: NAME }));
   const socket = new GalilSocket(NAME);
   const doc = GalilConnections.findOne({ name: NAME });
   test.isNotUndefined(doc);
