@@ -10,6 +10,7 @@ describe('Socket initialization', function () {
     stubs.restoreAll();
   });
   it('Should export GalilSocket as a valid class', function (test) {
+    expect(Galil).to.be.defined;
     expect(GalilSocket).to.be.defined;
     expect(GalilConnections).to.be.defined;
   });
