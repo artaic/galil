@@ -3,6 +3,7 @@ node_js:
   - "0.12"
 before_install:
   - "curl -L https://raw.githubusercontent.com/arunoda/travis-ci-meteor-packages/master/configure.sh | /bin/sh"
+  - "brew install nvm"
 services:
   - mongodb
 before_script:
