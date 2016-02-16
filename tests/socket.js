@@ -1,98 +1,112 @@
-const NAME = 'test';
-const Server = Npm.require('net').Server;
+const util = Npm.require('util');
 
-let resetCollection = function (name) {
-  const collection = this[name];
-  if (collection) {
-    collection.remove({});
-  } else {
-    this[name] = new Mongo.Collection(null);
-  }
-}
+describe('Socket initialization', function () {
+  let name = 'test';
+  beforeEach(function (test) {
+    stubs.create('upsert', GalilConnections, 'upsert');
+    stubs.create('update', GalilConnections, 'update');
+  });
+  afterEach(function (test) {
+    stubs.restoreAll();
+  });
+  it('Should export GalilSocket as a valid class', function (test) {
+    expect(GalilSocket).to.be.defined;
+    expect(GalilConnections).to.be.defined;
+  });
+  it('Should attempt to upsert a document when instanced', function (test) {
+    const socket = new GalilSocket(name);
 
-let reset = function () {
-}
+    expect(stubs.upsert).to.have.been.calledWith({
+      name: name
+    }, {
+      $set: {
+        connection: {
+          status: 'disconnected',
+          retryCount: 0,
+          retryTime: null,
+          reason: null
+        }
+      },
+      $setOnInsert: {
+        messages: [],
+        tail: [],
+        name: name
+      }
+    });
+  });
+  it('Should initialize with a data event listener', function (test) {
+    const socket = new GalilSocket(name);
+    expect(socket._events.data).to.be.instanceof(Function);
+  });
+});
 
-class GalilServer extends Server {
-  constructor() {
-    super(...arguments);
-    this._connectedClients = new Set();
-    this._commands = new Set([
-    ]);
+describe('Socket connection', function () {
+  let name = 'test';
+  let socket = new GalilSocket(name);
+  let server = new GalilServer();
 
-    this.once('listening', Meteor.bindEnvironment(() => {
-      const addConnection = Meteor.bindEnvironment(client => {
-        this._connectedClients.add(client);
+  beforeAll(function (test, waitFor) {
+    server.listen(8124);
+  });
+  beforeEach(function () {
+    socket = new GalilSocket(name);
+    stubs.create('update', GalilConnections, 'update');
+  });
+  afterEach(function () {
+    stubs.restoreAll();
+    server.clients.forEach(client => client.destroy());
+    socket = new GalilSocket(name);
+  });
+  afterAll(function () {
+    server.close();
+  });
+  it('Should be able to connect to the server', function (test, waitFor) {
+    const addr = server.address();
+    socket.connect(addr, Meteor.bindEnvironment(waitFor(() => {
+      expect(addr.port).to.be.equal(8124);
+      expect(socket.remotePort).to.be.equal(8124);
+      expect(stubs.update).to.have.been.calledWith({
+        name: name
+      }, {
+        $set: {
+          'connection.status': 'connected',
+          'connection.retryCount': 0,
+          'connection.retryTime': null,
+          'connection.reason': null
+        },
       });
+    })));
+  });
+  it('Should attempt reconnect when the server closes', function () {
+  });
+});
 
-      this.on('connection', addConnection);
+describe('Writing to Socket', function () {
+  let name = 'test';
+  let socket = new GalilSocket(name);
+  let server = new GalilServer();
 
-      this.on('close', Meteor.bindEnvironment(() => {
-        this.removeListener('connection', addConnection);
-        this._connectedClients.forEach(connection => connection.destroy());
-        this._connectedClients.clear();
-      }));
+  beforeAll(function (test, waitFor) {
+    server.listen(8124, Meteor.bindEnvironment(() => {
     }));
-  }
-  get clients() {
-    return this._connectedClients;
-  }
-}
-
-Tinytest.add('GalilSocket and GalilConnections should export', function (test) {
-  test.isNotUndefined(GalilSocket);
-  test.isNotUndefined(GalilConnections);
-  test.instanceOf(GalilConnections, Mongo.Collection);
-});
-
-Tinytest.add('Instancing a GalilSocket should upsert document', function (test) {
-  GalilConnections = new Mongo.Collection(null);
-  // GalilConnections.remove({ name: NAME });
-  // test.isUndefined(GalilConnections.findOne({ name: NAME }));
-  const socket = new GalilSocket(NAME);
-  const doc = GalilConnections.findOne({ name: NAME });
-  test.isNotUndefined(doc);
-});
-
-Tinytest.addAsync('Should be able to connect to a socket server', function (test, done) {
-  const server = new GalilServer();
-  server.listen(8124, Meteor.bindEnvironment(() => {
-    const socket = new GalilSocket(NAME);
-    socket.once('connect', Meteor.bindEnvironment(() => {
-      server.close();
-      test.isFalse(socket._connecting);
-      done();
-    }));
-    socket.connect(server.address());
-  }));
-});
-
-Tinytest.addAsync('Should attempt reconnection when the server closes', function (test, done) {
-  const server = new Server();
-
-  server.listen(8124, Meteor.bindEnvironment(() => {
-    const socket = new GalilSocket(NAME);
-    socket.once('connect', Meteor.bindEnvironment(() => {
-      console.log('Connected.');
-      server.close();
-      done();
-    }));
-    socket.connect(server.address());
-  }));
-});
-
-Tinytest.addAsync('Should write message when receiving response', function (test, done) {
-  const server = new GalilServer();
-  server.listen(8124, Meteor.bindEnvironment(() => {
-    const socket = new GalilSocket(NAME);
-    socket.once('connect', Meteor.bindEnvironment(() => {
-      socket.once('data', Meteor.bindEnvironment((data) => {
+  });
+  beforeEach(function () {
+    socket = new GalilSocket(name);
+    stubs.create('update', GalilConnections, 'update');
+  });
+  afterEach(function () {
+    stubs.restoreAll();
+    server.clients.forEach(client => client.destroy());
+    socket = new GalilSocket(name);
+  });
+  afterAll(function () {
+    server.close();
+  });
+  it('Should write a message to the tail', function (test, waitFor) {
+    socket.connect(server.address(), Meteor.bindEnvironment(waitFor(() => {
+      socket.once('data', Meteor.bindEnvironment(data => {
         console.log(data);
-        server.close();
-        done();
       }));
-      server.write('Hello\r\n');
-    }));
-    socket.connect(server.address());
-  }));
+    })));
+  });
 });

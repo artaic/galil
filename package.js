@@ -11,19 +11,23 @@ Package.onUse(function(api) {
   api.use(['mongo', 'check', 'ecmascript', 'promise']);
 
   api.export('GalilConnections');
-  api.export('GalilSocket', 'server');
-  api.export('Galil', 'server');
+  api.export(['GalilSocket', 'Galil', 'GalilServer'], 'server');
 
-  api.addFiles('connections.js');
+  api.addFiles('lib/connections.js');
   api.addFiles([
-    'sockets.js',
-    'galil.js',
-    'array.js'
+    'lib/sockets.js',
+    'lib/galil.js',
+    'lib/array.js',
+    'lib/server.js'
   ], 'server');
 });
 
 Package.onTest(function(api) {
-  api.use(['tinytest', 'ecmascript', 'check', 'mongo']);
+  api.use('ecmascript');
+  api.use([
+    'practicalmeteor:munit',
+    'tulip:munit-helpers'
+  ]);
   api.use('insightfil:galil');
 
   api.addFiles([
