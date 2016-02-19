@@ -1,46 +1,42 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '1.1.8',
+  version: '1.3.1',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('1.2.0.1');
-  var both = ['client', 'server'];
+  api.versionsFrom('1.2.1');
+  api.use(['mongo', 'check', 'ecmascript', 'promise']);
 
-  api.use([
-    'mongo',
-    'check',
-    'ecmascript',
-    'es5-shim',
-    'promise',
-    'tracker',
-    'erasaur:meteor-lodash@3.10.1'
-  ], both);
-  api.use('reactive-var', 'client')
+  api.export('GalilConnections');
+  api.export(['GalilSocket', 'Galil', 'GalilServer'], 'server');
 
-  api.export('Galil', both);
-
-  api.addFiles('lib/common.js', both);
-  api.addFiles('lib/client.js', 'client');
+  api.addFiles('lib/connections.js');
   api.addFiles([
-    'lib/connection.js',
-    'lib/server.js',
-    'lib/events.js',
-    'lib/wrappers/array.js'
+    'lib/sockets.js',
+    'lib/galil.js',
+    'lib/array.js',
+    'lib/server.js'
   ], 'server');
 });
 
 Package.onTest(function(api) {
-  api.use(['practicalmeteor:munit', 'ecmascript', 'erasaur:meteor-lodash']);
+  api.use('ecmascript');
+  api.use([
+    'practicalmeteor:munit',
+    'tulip:munit-helpers'
+  ]);
   api.use('insightfil:galil');
 
-  api.addFiles(['test/init.js', 'test/connection.js']);
+  api.addFiles([
+    'tests/socket.js'
+  ], 'server');
 });
 
 Npm.depends({
-  'xregexp': '3.0.0'
+  'xregexp': '3.0.0',
+  'colors': '1.1.2',
 });
 
