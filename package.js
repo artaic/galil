@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '1.3.2',
+  version: '1.3.5',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -11,7 +11,7 @@ Package.onUse(function(api) {
   api.use(['mongo', 'check', 'ecmascript', 'promise']);
 
   api.export('GalilConnections');
-  api.export(['GalilCoroutine', 'GalilSocket', 'Galil', 'GalilServer'], 'server');
+  api.export(['GalilSocket', 'Galil', 'GalilServer'], 'server');
 
   api.addFiles('lib/connections.js');
   api.addFiles([
