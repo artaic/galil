@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:galil',
-  version: '1.3.5',
+  version: '1.3.8',
   summary: 'Interact with the Galil controller',
   git: 'https://github.com/artaic/Galil',
   documentation: 'README.md'
@@ -34,10 +34,3 @@ Package.onTest(function(api) {
     'tests/socket.js'
   ], 'server');
 });
-
-Npm.depends({
-  'xregexp': '3.0.0',
-  'bluebird': '3.3.1',
-  'reconnect-core': '1.1.0'
-});
-
