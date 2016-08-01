@@ -5,6 +5,7 @@
   "main": "dist/galil.js",
   "directories": {
     "lib": "src",
+    "docs": "docs",
     "test": "tests"
   },
   "config": {
@@ -14,6 +15,7 @@
     "prepublish": "npm run build",
     "start": "node -r ./dist/bundle.js",
     "dev-server": "node -r babel-register ./server",
+    "docs": "./node_modules/.bin/esdoc -c ./esdoc.json",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config ./webpack.config.js --progress --profile --colors",
     "dev": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config ./webpack.config.js --progress --profile --colors --watch"
@@ -40,6 +42,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "babel-register": "^6.11.6",
     "cross-env": "^2.0.0",
+    "esdoc": "^0.4.7",
     "minimist": "^1.2.0",
     "webpack": "^1.13.1"
   },

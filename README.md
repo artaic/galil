@@ -13,42 +13,21 @@ but may also work with other models.
 This software, while highly functional, is being provided under an MIT open
 source license, and thus is provided as-is without warranty of any kind.
 
-# API
-
-## Connection
+### Basic Usage
 
 ```
-Galil.connect(Number port, String host)
-```
+import Galil from 'galil';
 
-Attempts to connect. Takes the same parameters as a plain
-`net.Socket.connect` from node.
+const galil = new Galil();
 
-Will attempt to reconnect up to five times. When the max retries is
-exceeded, it will write an error and fail silently.
+galil.commands.on('data', function (data) {
+  console.log(`Received message on commands socket: ${data}`);
+});
 
+galil
+  .connect(23, process.env.GALIL_HOST)
+  .then(() => {
+    console.log('Galil is connected!');
+    galil.send('MG "Are we good to go, Captain?"')
+  });
 ```
-Galil.reconnect()
-```
-
-Resets the `retryCount` for every socket and then attempts to connect
-with the last used address.
-
-```
-Galil.disconnect()
-```
-Closes the connection.
-
-## Commands
-
-```
-Galil.sendCommand(String command, [timeout=60000]);
-```
-
-Sends a command on the galil socket and waits for a `:` response on the
-socket (suggesting that it has been successfully sent).
-
-```
-Galil.execute(String command, RegExp end [, timeout=60000])
-```
-Execute a subroutine and wait to receive a message.

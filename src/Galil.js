@@ -1,6 +1,12 @@
 import Socket from 'Socket';
 import { EventEmitter } from 'events';
 
+/**
+ * Galil controller.
+ *
+ * @class Galil
+ * @extends events.EventEmitter
+ */
 export default class Galil extends EventEmitter {
   constructor() {
     super(...arguments);
@@ -21,9 +27,15 @@ export default class Galil extends EventEmitter {
   /**
    * Finds all available devices.
    *
-   * @function findDevices
+   * @function Galil.findDevices
    * @static
    * @returns {[Object]} all devices that were found.
+   * @example
+   * > Galil.findDevices();
+   * [{
+   *   port: 5000,
+   *   address: '::'
+   * }]
    */
   static findDevices() {
     console.log('Searching for devices...')
@@ -48,7 +60,7 @@ export default class Galil extends EventEmitter {
    * Connect to the galil device.
    * All sockets will be connected, after which, a "connect" event will be fired.
    *
-   * @function connect
+   * @function Galil#connect
    * @emits connect when successful connection has been established.
    * @emits error when an error in connection occurs.
    * @returns {Promise}
@@ -71,14 +83,24 @@ export default class Galil extends EventEmitter {
       .then(() => this.emit('connect'))
       .catch(err => this.emit('error', err))
   }
+  /**
+   * Disconnects from the controller
+   * Stops all attempts at reconnecting.
+   *
+   * @function disconnect
+   */
   disconnect() {
     return Promise.map(Object.entries(this.sockets), entry => {
       return new Promise((resolve, reject) => {
         const [ name, socket ] = entry;
+        socket.stopReconnecting();
         socket.once('close', resolve)
         socket.end();
         socket.destroy();
       });
     }).then(() => this.emit('disconnect'));
+  }
+  async sendCommand(command, timeout=5000) {
+    return await this.commands.send(command, timeout);
   }
 }
