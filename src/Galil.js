@@ -53,11 +53,11 @@ export default class Galil extends EventEmitter {
     return this._interrupts;
   }
   get sockets() {
-    return {
-      commands: this._commands,
-      messages: this._messages,
-      interrupts: this._interrupts
-    };
+    return new Map([
+      [ commands, this._commands     ],
+      [ messages, this._messages     ],
+      [ interrupts, this._interrupts ]
+    ]);
   }
   /**
    * Connect to the galil device.
@@ -80,7 +80,7 @@ export default class Galil extends EventEmitter {
    * What now?
    */
   connect() {
-    return Promise.map(Object.entries(this.sockets), entry => {
+    return Promise.map(this.sockets.entries(), entry => {
       const [ name, socket ] = entry;
       return socket.connectAsync(...arguments);
     })
@@ -95,7 +95,7 @@ export default class Galil extends EventEmitter {
    * @emits disconnect when disconnect is successful
    */
   disconnect() {
-    return Promise.map(Object.entries(this.sockets), entry => {
+    return Promise.map(this.sockets.entries(), entry => {
       return new Promise((resolve, reject) => {
         const [ name, socket ] = entry;
         socket.stopReconnecting();

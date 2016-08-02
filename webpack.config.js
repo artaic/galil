@@ -3,10 +3,7 @@ import webpack from 'webpack';
 
 export default {
   target: 'node',
-  entry: [
-    'babel-polyfill',
-    path.join(__dirname, 'src', 'Galil.js')
-  ],
+  entry: path.join(__dirname, 'src', 'Galil.js'),
   output: {
     filename: 'galil.js',
     libraryTarget: 'commonjs2',
@@ -28,7 +25,7 @@ export default {
     }]
   },
   plugins: [
-    new webpack.NoErrorsPlugin(),
+    // new webpack.NoErrorsPlugin(),
     new webpack.optimize.UglifyJsPlugin(),
     new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.ProvidePlugin({ 'Promise': 'bluebird' })
