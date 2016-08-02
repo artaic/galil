@@ -31,3 +31,10 @@ galil
     galil.send('MG "Are we good to go, Captain?"')
   });
 ```
+
+### Generating docs
+
+```
+$ npm run docs
+$ open docs/index.html
+```

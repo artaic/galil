@@ -1,7 +1,7 @@
 {
   "name": "galil",
-  "version": "1.0.0",
-  "description": "[![Build Status](https://travis-ci.org/artaic/galil.svg?branch=master)](https://travis-ci.org/artaic/galil)",
+  "version": "1.0.4",
+  "description": "Basic network controller for a galil",
   "main": "dist/galil.js",
   "directories": {
     "lib": "src",
@@ -43,6 +43,7 @@
     "babel-register": "^6.11.6",
     "cross-env": "^2.0.0",
     "esdoc": "^0.4.7",
+    "esdoc-es7-plugin": "0.0.3",
     "minimist": "^1.2.0",
     "webpack": "^1.13.1"
   },

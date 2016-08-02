@@ -24,10 +24,8 @@ export default class GalilSocket extends Socket {
   /**
    * On losing connection to the server,
    * This will attempt to initiate a reconnection with an "exponential" strategy
-   *
    * @function GalilSocket#_bindReconnectListener
    * @private
-   * @returns void
    */
   _bindReconnectListener() {
     this.stopReconnecting();
@@ -62,6 +60,14 @@ export default class GalilSocket extends Socket {
   stopReconnecting() {
     this.removeListener('close', this._onReconnect);
   }
+  /**
+   * Send a command and handle the possiblity of an error response.
+   * @function GalilSocket#_send
+   * @private
+   * @param {String} command the command to send
+   * @param {Number} timeout the time before erroring out.
+   * @throws GalilError if an error was encountered.
+   */
   async _send(command, timeout) {
     let onData = noop;
     const received = [];
@@ -102,8 +108,8 @@ export default class GalilSocket extends Socket {
   }
   /**
    * Promisified connect, virtually the same as `net.connect`
-   *
    * @function GalilSocket#connectAsync
+   * @emits reconnect_attempt when a reconnect is attempted.
    * @returns {Promise} the promise result.
    */
   connectAsync() {
@@ -113,6 +119,25 @@ export default class GalilSocket extends Socket {
       super.connect(...arguments);
     });
   }
+  /**
+   * Send a command to this socket and await a response.
+   *
+   * @function GalilSocket#send
+   * @param {String|[String]} commands the commands to send. Will split on delimiter.
+   * @param {Number} timeout the timeout for each individual command
+   * @returns {Promise}
+   * @example
+   * const s = new GalilSocket();
+   * let onData = function (data) {
+   *   console.log(`Received data! ${data}`);
+   * }
+   * s.connectAsync(5000, '::').then(() => {
+   *   s.on('data', onData);
+   *   return s.send('MG "Hello!"');
+   * }).finally(() => {
+   *   s.removeListener('data', onData);
+   * });
+   */
   send(commands, timeout) {
     return Promise.map(this._splitCommands(commands), command => {
       return this._send(command, timeout);

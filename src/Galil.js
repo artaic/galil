@@ -6,6 +6,9 @@ import { EventEmitter } from 'events';
  *
  * @class Galil
  * @extends events.EventEmitter
+ *
+ * @emits interrupt when an interrupt is received
+ * @emits message when an unsolicited message is received.
  */
 export default class Galil extends EventEmitter {
   constructor() {
@@ -61,10 +64,11 @@ export default class Galil extends EventEmitter {
    * All sockets will be connected, after which, a "connect" event will be fired.
    *
    * @function Galil#connect
+   * @param {Number} port the port to connect to
+   * @param {String} host the host to connect to
    * @emits connect when successful connection has been established.
    * @emits error when an error in connection occurs.
    * @returns {Promise}
-   *
    * @example
    * > galil
    *    .once('connect', () => console.log('All sockets connected.'))
@@ -87,7 +91,8 @@ export default class Galil extends EventEmitter {
    * Disconnects from the controller
    * Stops all attempts at reconnecting.
    *
-   * @function disconnect
+   * @function Galil#disconnect
+   * @emits disconnect when disconnect is successful
    */
   disconnect() {
     return Promise.map(Object.entries(this.sockets), entry => {
@@ -100,6 +105,13 @@ export default class Galil extends EventEmitter {
       });
     }).then(() => this.emit('disconnect'));
   }
+  /**
+   * Sends a command to the controller.
+   * @function Galil#sendCommand
+   * @param {String} command the command to send
+   * @param {Number} [timeout=5000] the time to wait before throwing an error
+   * @return {[String]} array of strings
+   */
   async sendCommand(command, timeout=5000) {
     return await this.commands.send(command, timeout);
   }

@@ -8,7 +8,7 @@ export default {
     path.join(__dirname, 'src', 'Galil.js')
   ],
   output: {
-    filename: 'bundle.js',
+    filename: 'galil.js',
     libraryTarget: 'commonjs2',
     path: path.join(__dirname, 'dist')
   },
@@ -29,8 +29,8 @@ export default {
   },
   plugins: [
     new webpack.NoErrorsPlugin(),
-    new webpack.ProvidePlugin({
-      'Promise': 'bluebird'
-    })
+    new webpack.optimize.UglifyJsPlugin(),
+    new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.ProvidePlugin({ 'Promise': 'bluebird' })
   ]
 }
