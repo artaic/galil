@@ -1,0 +1,56 @@
+{
+  "name": "galil",
+  "version": "1.1.4",
+  "description": "Basic network controller for a galil",
+  "main": "dist/galil.js",
+  "directories": {
+    "lib": "src",
+    "docs": "docs",
+    "test": "tests"
+  },
+  "config": {
+    "production": "./webpack.config.production.js"
+  },
+  "scripts": {
+    "prepublish": "npm run build",
+    "start": "node -r ./dist/bundle.js",
+    "dev-server": "node -r babel-register ./server",
+    "docs": "./node_modules/.bin/esdoc -c ./esdoc.json",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config ./webpack.config.js --progress --profile --colors",
+    "dev": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config ./webpack.config.js --progress --profile --colors --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/artaic/galil.git"
+  },
+  "author": {
+    "name": "Alex Frazer",
+    "email": "Alexadfrazer@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/artaic/galil/issues"
+  },
+  "homepage": "https://github.com/artaic/galil#readme",
+  "devDependencies": {
+    "babel-core": "^6.11.4",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-transform-runtime": "^6.12.0",
+    "babel-polyfill": "^6.9.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "babel-register": "^6.11.6",
+    "cross-env": "^2.0.0",
+    "esdoc": "^0.4.7",
+    "esdoc-es7-plugin": "0.0.3",
+    "webpack": "^1.13.1"
+  },
+  "dependencies": {
+    "backoff": "^2.5.0",
+    "bluebird": "^3.4.1",
+    "eversocket": "0.0.4",
+    "lodash": "^4.14.1"
+  }
+}
