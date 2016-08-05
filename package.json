@@ -1,6 +1,6 @@
 {
   "name": "galil",
-  "version": "1.0.5",
+  "version": "1.1.4",
   "description": "Basic network controller for a galil",
   "main": "dist/galil.js",
   "directories": {
@@ -28,7 +28,7 @@
     "name": "Alex Frazer",
     "email": "Alexadfrazer@gmail.com"
   },
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/artaic/galil/issues"
   },
@@ -50,6 +50,7 @@
   "dependencies": {
     "backoff": "^2.5.0",
     "bluebird": "^3.4.1",
+    "eversocket": "0.0.4",
     "lodash": "^4.14.1"
   }
 }

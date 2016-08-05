@@ -1,4 +1,7 @@
 import Socket from 'Socket';
+import noop from 'lodash/noop';
+import Bluebird from 'bluebird';
+import { createSocket } from 'dgram';
 import { EventEmitter } from 'events';
 
 /**
@@ -13,35 +16,20 @@ import { EventEmitter } from 'events';
 export default class Galil extends EventEmitter {
   constructor() {
     super(...arguments);
+
+    this._connected = false;
+
     this._commands = new Socket();
     this._messages = new Socket();
     this._interrupts = new Socket();
 
     this._messages
-      .on('connect', () => this._messages.write('CF I\r\n'))
+      .on('connect', () => this._messages.send('CF I', 5000))
       .on('data', data => this.emit('message', data));
 
-    this._interrupts
-      .on('connect', () => this._interrupts.write('EF'))
-      .on('data', data => {
-        console.log('Received software interrupt')
-      });
-  }
-  /**
-   * Finds all available devices.
-   *
-   * @function Galil.findDevices
-   * @static
-   * @returns {[Object]} all devices that were found.
-   * @example
-   * > Galil.findDevices();
-   * [{
-   *   port: 5000,
-   *   address: '::'
-   * }]
-   */
-  static findDevices() {
-    console.log('Searching for devices...')
+    Array.from(this.sockets.values()).forEach(socket => {
+      socket.on('close', () => this.emit('close', socket));
+    });
   }
   get commands() {
     return this._commands;
@@ -54,9 +42,8 @@ export default class Galil extends EventEmitter {
   }
   get sockets() {
     return new Map([
-      [ commands, this._commands     ],
-      [ messages, this._messages     ],
-      [ interrupts, this._interrupts ]
+      [ "commands",   this._commands     ],
+      [ "messages",   this._messages     ],
     ]);
   }
   /**
@@ -80,12 +67,12 @@ export default class Galil extends EventEmitter {
    * What now?
    */
   connect() {
-    return Promise.map(this.sockets.entries(), entry => {
+    return Bluebird.map(this.sockets.entries(), entry => {
       const [ name, socket ] = entry;
       return socket.connectAsync(...arguments);
     })
-      .then(() => this.emit('connect'))
-      .catch(err => this.emit('error', err))
+    .then(() => this.emit('connect'))
+    .catch(err => this.emit('error', err))
   }
   /**
    * Disconnects from the controller
@@ -95,8 +82,8 @@ export default class Galil extends EventEmitter {
    * @emits disconnect when disconnect is successful
    */
   disconnect() {
-    return Promise.map(this.sockets.entries(), entry => {
-      return new Promise((resolve, reject) => {
+    return Bluebird.map(this.sockets.entries(), entry => {
+      return new Bluebird((resolve, reject) => {
         const [ name, socket ] = entry;
         socket.stopReconnecting();
         socket.once('close', resolve)

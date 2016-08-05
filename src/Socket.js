@@ -1,64 +1,25 @@
-import { Socket } from 'net';
+import Bluebird from 'bluebird';
 import noop from 'lodash/noop';
 import flatten from 'lodash/flatten';
-import { call, ExponentialStrategy } from 'backoff';
+import { EverSocket as Socket } from 'eversocket';
 
 /**
  * A specialized socket with reconnection properties.
  *
  * @class GalilSocket
- * @extends net.Socket
+ * @extends EverSocket
  */
 export default class GalilSocket extends Socket {
   static SUCCESS = /^\:$/;
   static FAILURE = /^\?$/;
   static DELIMITER = /\r\n\;/;
   constructor() {
-    super(...arguments);
-
-    this._retries = 0;
+    super({
+      reconnectWait: 1000,
+      timeout: 5000,
+      reconnectOnTimeout: true
+    });
     this.setEncoding('ascii');
-    this._onReconnect = noop;
-    this.on('close', this._onReconnect);
-  }
-  /**
-   * On losing connection to the server,
-   * This will attempt to initiate a reconnection with an "exponential" strategy
-   * @function GalilSocket#_bindReconnectListener
-   * @private
-   */
-  _bindReconnectListener() {
-    this.stopReconnecting();
-
-    this._onReconnect = () => {
-      const reconnect = call(() => {
-        return this.connect(...arguments);
-      }, (err, res) => {
-        this.emit('reconnect_attempt', reconnect.getNumRetries());
-        if (err) {
-          this.emit('error', err);
-        } else {
-          console.log(res.statusCode);
-        }
-      });
-
-      const strategy = new ExponentialStrategy();
-      reconnect.setStrategy(strategy);
-      reconnect.failAfter(10);
-      reconnect.start();
-    }
-
-    this.on('close', this._onReconnect);
-  }
-  /**
-   * Will stop attempting reconnects.
-   * Re-call "connect" in order to rebind this listener.
-   *
-   * @function stopReconnecting
-   * @returns void
-   */
-  stopReconnecting() {
-    this.removeListener('close', this._onReconnect);
   }
   /**
    * Send a command and handle the possiblity of an error response.
@@ -68,12 +29,12 @@ export default class GalilSocket extends Socket {
    * @param {Number} timeout the time before erroring out.
    * @throws GalilError if an error was encountered.
    */
-  async _send(command, timeout) {
+  _send(command, timeout) {
     let onData = noop;
     const received = [];
 
-    try {
-      await new Promise((resolve, reject) => {
+    return new Bluebird((resolveOuter, rejectOuter) => {
+      return new Bluebird((resolve, reject) => {
         onData = function (data) {
           data.split(/\r\n/).forEach(line => {
             if (GalilSocket.SUCCESS.test(line)) {
@@ -86,25 +47,20 @@ export default class GalilSocket extends Socket {
           });
         }
         this.on('data', onData).write(`${command}\r\n`);
-      }).timeout(timeout);
-    } catch (e) {
-      console.log(e);
-      if (e.message === 'GalilError') {
-        const msg = await this._getErrorMessage();
-        console.log(msg);
-        throw new Error(msg);
-      } else {
-        throw e;
-      }
-    } finally {
+      }).then(resolveOuter).catch(err => {
+        return this._getErrorMessage().then(err => {
+          rejectOuter(new Error(err));
+        }).catch(rejectOuter);
+      });
+    }).finally(() => {
       this.removeListener('data', onData);
-    }
+    });
   }
   _splitCommands(commands) {
     return commands.split(GalilSocket.DELIMITER).filter(Boolean);
   }
   async _getErrorMessage() {
-    return await this._send('TC 1');
+    return this._send('TC 1');
   }
   /**
    * Promisified connect, virtually the same as `net.connect`
@@ -114,7 +70,6 @@ export default class GalilSocket extends Socket {
    */
   connectAsync() {
     return new Promise((resolve, reject) => {
-      this._bindReconnectListener(...arguments);
       this.once('connect', resolve).once('error', reject);
       super.connect(...arguments);
     });
@@ -139,7 +94,8 @@ export default class GalilSocket extends Socket {
    * });
    */
   send(commands, timeout) {
-    return Promise.map(this._splitCommands(commands), command => {
+    const arr = this._splitCommands(commands);
+    return Bluebird.map(arr, command => {
       return this._send(command, timeout);
     });
   }
